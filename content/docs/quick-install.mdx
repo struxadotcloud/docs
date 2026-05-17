@@ -1,0 +1,54 @@
+---
+title: Quick Install
+description: Install Struxa in one command using the automated installer.
+---
+
+The Struxa installer handles everything: Docker, nginx, SSL certificates, secrets generation, and service startup.
+
+## One-Command Install
+
+```bash
+sudo bash <(curl -fsSL https://install.struxa.cloud)
+```
+
+The installer is interactive. You will be prompted before any destructive action is taken.
+
+## What the Installer Does
+
+1. Checks prerequisites (`curl`, `openssl`, Docker)
+2. Installs Docker if it is not already present
+3. Asks whether to install the Panel only, or Panel + Wings
+4. Prompts for domain name(s)
+5. Generates all secrets and RSA key pairs automatically
+6. Configures nginx (or detects Apache/Caddy) and obtains an SSL certificate via Let's Encrypt
+7. Pulls Docker images and starts all services
+8. Optionally configures Cloudflare Turnstile CAPTCHA
+
+## Installer Prompts
+
+| Prompt | Description |
+|---|---|
+| Installation mode | Panel only, or Panel + Wings |
+| Panel domain | e.g. `panel.example.com` |
+| Wings domain | e.g. `node.example.com` (Wings mode only) |
+| Webserver | Auto-detect existing server, install nginx, or skip |
+| SSL | Let's Encrypt (recommended), self-signed, or HTTP only |
+| Turnstile secret | Optional Cloudflare CAPTCHA secret key |
+
+## Install Locations
+
+| Path | Contents |
+|---|---|
+| `/opt/struxa/` | Panel `docker-compose.prod.yml` and `.env.prod` |
+| `/opt/wings/` | Wings `compose.yml` and `config.yml` |
+| `/etc/nginx/sites-available/` | nginx reverse proxy vhosts |
+
+## After Installation
+
+Your panel is available at `https://panel.example.com`. Open it and complete the first-run setup to create your admin account.
+
+If you installed Wings, register the node in the panel before any game servers can start. See [Wings Configuration](/wings/configuration).
+
+<Callout type="warn">
+  The generated `.env.prod` file contains all secrets for your installation. Keep it secure — never commit it to version control.
+</Callout>

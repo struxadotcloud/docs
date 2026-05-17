@@ -1,0 +1,46 @@
+---
+title: Panel Overview
+description: The Struxa panel is a Next.js dashboard for managing game servers, nodes, users, and more.
+---
+
+The Struxa panel is a web-based control panel built with Next.js 16, React 19, and Better Auth. It connects to MySQL for persistence and communicates with Wings nodes for game server control.
+
+## Features
+
+- **Server management** — Create, start, stop, restart, and delete game servers
+- **Real-time console** — WebSocket-based live console output and command input
+- **File manager** — Browse, edit, upload, download, and delete server files via Wings API
+- **User management** — Admin console for managing panel users and roles
+- **Node management** — Register and monitor Wings nodes and their port allocations
+- **Eggs / Nests** — Game server templates based on the Pterodactyl egg format
+- **Schedules** — Cron-based automated tasks (power actions, commands, backups)
+- **Backups** — Local and S3-compatible server backups
+- **Activity logs** — Audit trail for all user and system actions
+- **API key management** — Per-user API keys via Better Auth
+
+## Admin Panel
+
+The admin section (`/admin`) is restricted to users with the `admin` role. From here you can manage:
+
+- Nodes and their allocations (IP:port assignments)
+- Nests and Eggs (server templates)
+- Database hosts for server-managed databases
+- All users and all servers
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16, React 19 |
+| Auth | Better Auth (sessions + API keys) |
+| API | oRPC (type-safe RPC over HTTP) |
+| Database | MySQL via Drizzle ORM |
+| Node agent | Wings (REST + WebSocket) |
+| Deployment | Docker Compose |
+
+## Next Steps
+
+<Cards>
+  <Card title="Panel Configuration" href="/panel/configuration" description="nginx setup, environment variables, and first-run." />
+  <Card title="Environment Variables" href="/reference/environment-variables" description="Full reference for all configuration variables." />
+</Cards>

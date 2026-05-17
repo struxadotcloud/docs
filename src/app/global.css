@@ -2,11 +2,158 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-html {
-  scrollbar-gutter: stable;
+/* ── Non-color design tokens (apply in all themes) ───────────────────────── */
+@theme {
+  --radius:    0rem;
+  --radius-sm: 0rem;
+  --radius-md: 0rem;
+  --radius-lg: 0rem;
+  --radius-xl: 0rem;
+  --radius-2xl: 0rem;
+  --radius-3xl: 0rem;
+
+  --font-sans: var(--font-cal-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  --color-accent-green: #22c55e;
+  --color-danger:       #f43f5e;
 }
 
-html > body[data-scroll-locked] {
-  margin-right: 0px !important;
-  --removed-body-scroll-bar-size: 0px !important;
+/* ── Dark mode — ops panel palette ──────────────────────────────────────── */
+/* Cascades over fumadocs .dark defaults because it appears after the imports */
+.dark {
+  --color-fd-background:           #0a0a0a;
+  --color-fd-foreground:           #ffffff;
+  --color-fd-muted:                #141414;
+  --color-fd-muted-foreground:     #888888;
+  --color-fd-popover:              #1a1a1a;
+  --color-fd-popover-foreground:   #ffffff;
+  --color-fd-card:                 #141414;
+  --color-fd-card-foreground:      #ffffff;
+  --color-fd-border:               #222222;
+  --color-fd-primary:              #ffffff;
+  --color-fd-primary-foreground:   #000000;
+  --color-fd-secondary:            rgba(255, 255, 255, 0.05);
+  --color-fd-secondary-foreground: #ffffff;
+  --color-fd-accent:               rgba(255, 255, 255, 0.05);
+  --color-fd-accent-foreground:    #ffffff;
+  --color-fd-ring:                 #555555;
+  --color-fd-overlay:              rgba(0, 0, 0, 0.7);
+}
+
+/* Override fumadocs neutral.css sidebar .dark overrides */
+.dark #nd-sidebar {
+  --color-fd-muted:             #141414;
+  --color-fd-secondary:         rgba(255, 255, 255, 0.05);
+  --color-fd-muted-foreground:  #888888;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  html > body[data-scroll-locked] {
+    margin-right: 0px !important;
+    --removed-body-scroll-bar-size: 0px !important;
+  }
+
+  body {
+    font-family: var(--font-cal-sans), sans-serif;
+  }
+
+  code, kbd, samp, pre {
+    font-family: var(--font-geist-mono), monospace;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+
+  .dark * {
+    border-color: #222222;
+  }
+}
+
+/* ── Code blocks ─────────────────────────────────────────────────────────── */
+/*
+  fumadocs wraps code blocks as: figure.shiki.border.bg-fd-card
+  The border and bg come from CSS vars — correct in dark mode.
+  Only enforce zero radius here (rounded-xl resolves to 0 via @theme but
+  fumadocs also uses rounded-b-xl for in-tab blocks, so be explicit).
+*/
+figure.shiki {
+  border-radius: 0 !important;
+}
+
+/* ── Sidebar: section-based panel ───────────────────────────────────────── */
+.dark #nd-sidebar {
+  border-right: 1px solid #222222 !important;
+  background-color: #0a0a0a !important;
+}
+
+#nd-sidebar a,
+#nd-sidebar button {
+  border-radius: 0 !important;
+}
+
+.dark #nd-sidebar [data-active='true'] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Flatten the footer icon/theme-switch card — both themes */
+#nd-sidebar .empty\:hidden {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0.25rem 0 !important;
+}
+
+/* Theme switcher left separator border */
+#nd-sidebar .empty\:hidden [class*="border"] {
+  border-inline-start: none !important;
+  border-left: none !important;
+}
+
+/* ── TOC (right panel): section-based ───────────────────────────────────── */
+.dark #nd-toc {
+  border-left: 1px solid #222222;
+}
+
+#nd-toc {
+  padding-top: 2rem !important;
+  padding-left: 1.25rem !important;
+  padding-right: 0.75rem !important;
+}
+
+/* TOC section title — DESIGN.md label: uppercase, muted, tiny */
+#nd-toc h3 {
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  font-size: 0.625rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.dark #nd-toc h3 {
+  color: #555555 !important;
+}
+
+/* TOC items left border color */
+.dark #nd-toc .flex.flex-col {
+  border-inline-start-color: #222222 !important;
+}
+
+.dark #nd-toc a {
+  color: #555555 !important;
+}
+
+.dark #nd-toc a[data-active='true'] {
+  color: #ffffff !important;
+}
+
+/* ── Content typography ──────────────────────────────────────────────────── */
+.dark .prose h2 {
+  border-bottom: 1px solid #222222;
+  padding-bottom: 0.5rem;
 }

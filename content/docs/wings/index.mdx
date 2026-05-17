@@ -1,0 +1,45 @@
+---
+title: Wings Overview
+description: Wings is the Struxa node agent — a Rust service that manages game server containers on each host.
+---
+
+Wings is the node agent component of Struxa. It runs on each physical or virtual machine that hosts game servers. The panel communicates with Wings over HTTP REST and WebSockets.
+
+## What Wings Does
+
+- Manages game server Docker containers (create, start, stop, restart, delete)
+- Streams real-time console output to the panel via WebSocket
+- Provides SFTP access to server files (port 2022 by default)
+- Handles file operations: uploads, downloads, decompression, compression
+- Manages backups: local, S3-compatible, restic, btrfs, zfs
+- Reports resource usage (CPU, RAM, disk, network) back to the panel
+- Enforces resource limits (memory, CPU, disk quotas per server)
+
+## Ports Used
+
+| Port | Protocol | Purpose |
+|------|----------|---------|
+| 8080 | HTTP / WebSocket | Wings API — panel communicates here |
+| 2022 | SSH / SFTP | File access to game server files |
+
+## Runtime
+
+Wings runs as a Docker container (`ghcr.io/struxadotcloud/wings`). The Docker socket is bind-mounted so Wings can manage sibling containers on the host.
+
+## Communication Flow
+
+```
+Panel ──HTTPS──► nginx ──► Wings :8080
+Panel ◄──WebSocket────────── Wings   (console streams, power state)
+User  ──SFTP :2022──────────► Wings SFTP ──► /var/lib/pterodactyl/<uuid>/
+```
+
+## Pterodactyl Compatibility
+
+Wings is a Rust rewrite of Pterodactyl Wings with 100% API compatibility. Any Pterodactyl egg, nest, or node configuration will work with Struxa Wings without modification.
+
+## Next Steps
+
+<Cards>
+  <Card title="Wings Configuration" href="/wings/configuration" description="Set up config.yml and register the node in the panel." />
+</Cards>

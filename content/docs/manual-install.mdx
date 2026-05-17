@@ -1,0 +1,139 @@
+---
+title: Manual Installation
+description: Step-by-step guide to installing Struxa without the automated installer.
+---
+
+Use this guide if you need fine-grained control or if the automated installer does not fit your environment.
+
+## 1. Install Docker
+
+```bash
+curl -fsSL https://get.docker.com | sh
+systemctl enable --now docker
+```
+
+Verify:
+
+```bash
+docker --version
+docker compose version
+```
+
+## 2. Create Directories
+
+```bash
+mkdir -p /opt/struxa
+mkdir -p /opt/wings  # if installing Wings
+```
+
+## 3. Fetch Compose Files
+
+**Panel:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/struxadotcloud/struxa/main/docker-compose.prod.yml \
+  -o /opt/struxa/docker-compose.prod.yml
+```
+
+**Wings** (optional):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/struxadotcloud/wings/main/compose.yml \
+  -o /opt/wings/compose.yml
+```
+
+## 4. Generate Secrets
+
+```bash
+MYSQL_ROOT_PASSWORD=$(openssl rand -hex 32)
+MYSQL_PASSWORD=$(openssl rand -hex 32)
+BETTER_AUTH_SECRET=$(openssl rand -hex 32)
+DATABASE_ENCRYPTION_KEY=$(openssl rand -hex 32)
+
+# RSA key pair for Wings authentication
+openssl genrsa -out /tmp/priv.pem 2048
+openssl rsa -in /tmp/priv.pem -pubout -out /tmp/pub.pem
+JWT_PRIVATE_KEY=$(base64 -w0 < /tmp/priv.pem)
+JWT_PUBLIC_KEY=$(base64 -w0 < /tmp/pub.pem)
+rm /tmp/priv.pem /tmp/pub.pem
+```
+
+## 5. Write `/opt/struxa/.env.prod`
+
+```bash
+cat > /opt/struxa/.env.prod << EOF
+GITHUB_REPOSITORY_OWNER=struxadotcloud
+IMAGE_TAG=latest
+
+MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+MYSQL_DATABASE=struxa
+MYSQL_USER=struxa
+MYSQL_PASSWORD=${MYSQL_PASSWORD}
+DATABASE_URL=mysql://struxa:${MYSQL_PASSWORD}@mysql:3306/struxa
+
+BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+BETTER_AUTH_URL=https://panel.example.com
+CORS_ORIGIN=https://panel.example.com
+APP_URL=https://panel.example.com
+
+JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+DATABASE_ENCRYPTION_KEY=${DATABASE_ENCRYPTION_KEY}
+EOF
+chmod 600 /opt/struxa/.env.prod
+```
+
+Replace `panel.example.com` with your actual domain.
+
+## 6. Configure nginx
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name panel.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/panel.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/panel.example.com/privkey.pem;
+
+    location / {
+        proxy_pass         http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection 'upgrade';
+        proxy_set_header   Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+}
+
+server {
+    listen 80;
+    server_name panel.example.com;
+    return 301 https://$host$request_uri;
+}
+```
+
+Obtain an SSL certificate with Certbot:
+
+```bash
+certbot --nginx -d panel.example.com --non-interactive --agree-tos \
+  -m you@example.com --redirect
+```
+
+## 7. Start Services
+
+```bash
+cd /opt/struxa
+docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+Verify:
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+## 8. Wings Setup (Optional)
+
+See [Wings Configuration](/wings/configuration) for writing `config.yml` and registering the node in the panel.
