@@ -1,0 +1,47 @@
+﻿---
+title: Next Steps
+description: What to do after the Panel is running.
+---
+
+## First-Run Setup
+
+On first boot, Struxa automatically runs database migrations. Navigate to your panel URL - you will be redirected to `/setup` to create the first admin account.
+
+After creating the admin account, you will land on the admin dashboard.
+
+## Add a Wings Node
+
+Game servers can only run once at least one Wings node is registered.
+
+<Cards>
+  <Card title="Wings Installation" href="/wings/installation/docker" description="Set up a Wings node agent on a game server host." />
+</Cards>
+
+## Configure Locations
+
+Locations are used to group nodes geographically or logically.
+
+1. Go to **Admin → Locations → Create Location**
+2. Set a short name (e.g. `us-east`) and a longer description
+
+## Add Node Allocations
+
+Allocations are IP:port pairs that Wings can assign to game servers.
+
+1. Go to **Admin → Nodes → your node → Allocations**
+2. Enter the node's IP address and a port range (e.g. `25565–25600`)
+
+## Import Eggs
+
+Eggs define how a specific game server is created - its Docker image, startup command, and configurable variables.
+
+1. Go to **Admin → Nests**
+2. Create a nest (e.g. `Minecraft`) then import or create eggs within it
+3. Pterodactyl-format eggs are fully compatible and can be imported directly
+
+## Create Your First Server
+
+1. Go to **Admin → Servers → Create Server**
+2. Select a node, allocation, and egg
+3. Set resource limits (memory, CPU, disk)
+4. The server will be installed and appear in the panel

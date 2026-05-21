@@ -1,0 +1,108 @@
+﻿---
+title: Docker
+description: Install Wings on a game server node using Docker Compose.
+---
+
+### Prerequisites
+
+- Docker 24+ installed on the node
+- A public IP or hostname reachable from the Panel
+- Ports 8080 and 2022 open on the node's firewall
+- Port range open for game server traffic (e.g. 25565–25600)
+
+## System Requirements
+
+| Resource | Minimum | Recommended |
+|---|---|---|
+| CPU | 1 vCPU | 2+ vCPU |
+| RAM | 1 GB | 4 GB+ |
+| Disk | 10 GB | 50 GB+ |
+| OS | Ubuntu 22.04 / Debian 12 | Ubuntu 22.04 LTS |
+
+## Step 1: Create the Node in the Panel
+
+Wings must be registered in the Panel before it can connect.
+
+1. Log in as admin → **Admin → Nodes → Create New Node**
+2. Set the FQDN or IP of the Wings host (e.g. `node.example.com`)
+3. Set memory and disk limits
+4. Save the node
+
+The `token_id` and `token` values you need for `config.yml` will be available on the **Configuration** tab of the newly created node.
+
+## Step 2: Create Directories
+
+```bash
+mkdir -p /opt/wings
+mkdir -p /etc/pterodactyl
+```
+
+## Step 3: Fetch Compose File
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/struxadotcloud/wings/main/compose.yml \
+  -o /opt/wings/compose.yml
+```
+
+## Step 4: Write `config.yml`
+
+Create `/etc/pterodactyl/config.yml`. Paste the content from **Admin → Nodes → your node → Configuration**, or write it manually:
+
+```yaml
+debug: false
+uuid: ""
+token_id: "YOUR_TOKEN_ID"
+token: "YOUR_TOKEN"
+api:
+  host: 0.0.0.0
+  port: 8080
+system:
+  root_directory: /var/lib/pterodactyl
+  username: pterodactyl
+  timezone: UTC
+  user:
+    uid: 988
+    gid: 988
+  sftp:
+    enabled: true
+    bind_port: 2022
+docker:
+  socket: /var/run/docker.sock
+  network:
+    name: pterodactyl_nw
+    driver: bridge
+remote: https://panel.example.com
+```
+
+Replace `YOUR_TOKEN_ID`, `YOUR_TOKEN`, and `panel.example.com` with your actual values.
+
+## Step 5: Start Wings
+
+```bash
+cd /opt/wings
+docker compose up -d
+```
+
+## Step 6: Verify the Connection
+
+```bash
+docker compose logs -f
+```
+
+Wings logs `Successfully connected to panel` when the token is valid and the connection is established.
+
+In the Panel, go to **Admin → Nodes** - the node should show a green heartbeat indicator within 30 seconds.
+
+## Firewall Configuration
+
+```bash
+# Wings API
+ufw allow 8080/tcp
+
+# SFTP
+ufw allow 2022/tcp
+
+# Game server port range (adjust to your allocation range)
+ufw allow 25565:25600/tcp
+ufw allow 25565:25600/udp
+```

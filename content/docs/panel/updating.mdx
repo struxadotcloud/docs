@@ -1,0 +1,51 @@
+﻿---
+title: Updating
+description: How to update the Struxa Panel to a new version.
+---
+
+## Before You Update
+
+- Read the [Changelogs](/changelogs) for breaking changes
+- Back up your database if doing a major version upgrade
+
+## Pull and Restart
+
+```bash
+cd /opt/struxa
+docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+Database migrations run automatically on startup.
+
+## Viewing Logs
+
+```bash
+cd /opt/struxa
+
+# Panel logs
+docker compose -f docker-compose.prod.yml logs -f web
+
+# Database logs
+docker compose -f docker-compose.prod.yml logs -f mysql
+```
+
+## Restart Panel Only
+
+```bash
+docker compose -f docker-compose.prod.yml restart web
+```
+
+## Stop and Start
+
+```bash
+# Stop all services
+docker compose -f docker-compose.prod.yml down
+
+# Start again
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+<Callout type="error">
+  `docker compose down -v` will delete the MySQL volume and all panel data. Only use it on a fresh installation or when intentionally wiping all data.
+</Callout>

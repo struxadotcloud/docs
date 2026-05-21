@@ -1,0 +1,57 @@
+---
+title: Installer
+description: Install the Panel using the official automated installer.
+---
+
+The recommended way to install Struxa is the official installer script. It handles everything in one run — Docker, secrets generation, webserver configuration, and SSL.
+
+## One-line Install
+
+Run as root on a fresh Linux server:
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud)
+```
+
+<Callout type="info">
+  The installer requires root. It reads from `/dev/tty` directly, so running it piped through curl works correctly.
+</Callout>
+
+## What the Installer Does
+
+1. **Checks prerequisites** - verifies Docker, Docker Compose, curl, and openssl. Offers to install Docker automatically if missing.
+2. **Fetches the latest release** - resolves the current stable tag from GitHub and downloads the production compose file.
+3. **Generates all secrets** - RSA key pair, auth secret, database passwords, and encryption key via openssl. Nothing is reused or hardcoded.
+4. **Asks for your domain** - derives `APP_URL`, `BETTER_AUTH_URL`, and `CORS_ORIGIN` from it automatically.
+5. **Configures a webserver** - detects existing nginx, Apache, or Caddy, or installs nginx fresh. Writes reverse proxy config for the panel.
+6. **Handles SSL** - obtains a Let's Encrypt certificate via certbot, generates a self-signed cert, or skips SSL entirely.
+7. **Starts services** - pulls images and starts the panel and MySQL containers.
+
+## Options
+
+| Flag / Argument | Effect |
+|---|---|
+| *(none)* | Interactive install of the latest stable release |
+| `--nightly` | Install the latest pre-release build |
+| `update` | Update an existing installation to the latest release |
+
+Install with Wings in the same run by selecting **Dashboard + Wings** when prompted — see [Wings - Installer](/wings/installation/installer) for what that step covers.
+
+## Updating
+
+To update an existing installation:
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud) update
+```
+
+The updater reads the current version from `/opt/struxa/.env.prod`, fetches the latest tag, updates the image tag, pulls new images, and restarts the panel.
+
+## What Gets Created
+
+| Path | Contents |
+|---|---|
+| `/opt/struxa/docker-compose.prod.yml` | Production compose file |
+| `/opt/struxa/.env.prod` | All secrets and configuration (chmod 600) |
+
+Webserver config is written to the appropriate location for your webserver (`/etc/nginx/sites-available/`, `/etc/apache2/sites-available/`, or `/etc/Caddyfile`).

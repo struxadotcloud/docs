@@ -1,22 +1,37 @@
----
-title: Panel Overview
-description: The Struxa panel is a Next.js dashboard for managing game servers, nodes, users, and more.
+﻿---
+title: Overview
+description: The Panel is a Next.js dashboard for managing game servers, nodes, users, and more.
 ---
 
-The Struxa panel is a web-based control panel built with Next.js 16, React 19, and Better Auth. It connects to MySQL for persistence and communicates with Wings nodes for game server control.
+The Panel is a web-based control panel built with Next.js 16, React 19, and Better Auth. It connects to MySQL for persistence and communicates with Wings nodes for game server control.
 
 ## Features
 
-- **Server management** — Create, start, stop, restart, and delete game servers
-- **Real-time console** — WebSocket-based live console output and command input
-- **File manager** — Browse, edit, upload, download, and delete server files via Wings API
-- **User management** — Admin console for managing panel users and roles
-- **Node management** — Register and monitor Wings nodes and their port allocations
-- **Eggs / Nests** — Game server templates based on the Pterodactyl egg format
-- **Schedules** — Cron-based automated tasks (power actions, commands, backups)
-- **Backups** — Local and S3-compatible server backups
-- **Activity logs** — Audit trail for all user and system actions
-- **API key management** — Per-user API keys via Better Auth
+- **Server management** - Create, start, stop, restart, and delete game servers
+- **Real-time console** - WebSocket-based live console output and command input
+- **File manager** - Browse, edit, upload, download, and delete server files via Wings API
+- **User management** - Admin console for managing panel users and roles
+- **Node management** - Register and monitor Wings nodes and their port allocations
+- **Eggs / Nests** - Game server templates based on the Pterodactyl egg format
+- **Schedules** - Cron-based automated tasks (power actions, commands, backups)
+- **Backups** - Local and S3-compatible server backups
+- **Activity logs** - Audit trail for all user and system actions
+- **API key management** - Per-user API keys via Better Auth
+
+## System Requirements
+
+| | Minimum | Recommended |
+|---|---|---|
+| **OS** | Ubuntu 22.04 / Debian 12 | Ubuntu 22.04 LTS |
+| **CPU** | 1 vCPU | 2 vCPU |
+| **RAM** | 512 MB | 1 GB |
+| **Disk** | 5 GB | 20 GB |
+
+Docker is required. The Panel and MySQL both run as Docker containers - Docker must be installed and running on the host.
+
+<Callout type="warn">
+  Running Wings on the same host as the Panel is possible but not recommended. Resource contention between game servers and the Panel can cause instability under load.
+</Callout>
 
 ## Admin Panel
 
@@ -38,9 +53,3 @@ The admin section (`/admin`) is restricted to users with the `admin` role. From 
 | Node agent | Wings (REST + WebSocket) |
 | Deployment | Docker Compose |
 
-## Next Steps
-
-<Cards>
-  <Card title="Panel Configuration" href="/panel/configuration" description="nginx setup, environment variables, and first-run." />
-  <Card title="Environment Variables" href="/reference/environment-variables" description="Full reference for all configuration variables." />
-</Cards>

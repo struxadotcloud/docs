@@ -1,11 +1,29 @@
----
-title: Manual Installation
-description: Step-by-step guide to installing Struxa without the automated installer.
+﻿---
+title: Docker
+description: Deploy the Struxa Panel using Docker Compose.
 ---
 
-Use this guide if you need fine-grained control or if the automated installer does not fit your environment.
+<Callout type="info">
+  This guide covers a manual Docker installation. For a fully automated setup that handles Docker, nginx, SSL, and secrets generation in one command, see the automated installer section in the [Introduction](/introduction) guide (coming soon).
+</Callout>
 
-## 1. Install Docker
+## Prerequisites
+
+- Linux VPS - Ubuntu 22.04+ or Debian 12+ recommended
+- Root access
+- A domain name pointed at your server
+- `curl` and `openssl` available
+
+## System Requirements
+
+| Resource | Minimum | Recommended |
+|---|---|---|
+| CPU | 1 vCPU | 2 vCPU |
+| RAM | 512 MB | 1 GB |
+| Disk | 5 GB | 20 GB |
+| OS | Ubuntu 22.04 / Debian 12 | Ubuntu 22.04 LTS |
+
+## Step 1: Install Docker
 
 ```bash
 curl -fsSL https://get.docker.com | sh
@@ -19,30 +37,20 @@ docker --version
 docker compose version
 ```
 
-## 2. Create Directories
+## Step 2: Create Directory
 
 ```bash
 mkdir -p /opt/struxa
-mkdir -p /opt/wings  # if installing Wings
 ```
 
-## 3. Fetch Compose Files
-
-**Panel:**
+## Step 3: Fetch Compose File
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/struxadotcloud/struxa/main/docker-compose.prod.yml \
   -o /opt/struxa/docker-compose.prod.yml
 ```
 
-**Wings** (optional):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/struxadotcloud/wings/main/compose.yml \
-  -o /opt/wings/compose.yml
-```
-
-## 4. Generate Secrets
+## Step 4: Generate Secrets
 
 ```bash
 MYSQL_ROOT_PASSWORD=$(openssl rand -hex 32)
@@ -58,7 +66,9 @@ JWT_PUBLIC_KEY=$(base64 -w0 < /tmp/pub.pem)
 rm /tmp/priv.pem /tmp/pub.pem
 ```
 
-## 5. Write `/opt/struxa/.env.prod`
+## Step 5: Write `.env.prod`
+
+Replace `panel.example.com` with your actual domain.
 
 ```bash
 cat > /opt/struxa/.env.prod << EOF
@@ -83,9 +93,11 @@ EOF
 chmod 600 /opt/struxa/.env.prod
 ```
 
-Replace `panel.example.com` with your actual domain.
+<Callout type="warn">
+  `.env.prod` contains all secrets for your installation. Keep it secure - never commit it to version control.
+</Callout>
 
-## 6. Configure nginx
+## Step 6: Configure nginx
 
 ```nginx
 server {
@@ -113,14 +125,14 @@ server {
 }
 ```
 
-Obtain an SSL certificate with Certbot:
+Obtain an SSL certificate:
 
 ```bash
 certbot --nginx -d panel.example.com --non-interactive --agree-tos \
   -m you@example.com --redirect
 ```
 
-## 7. Start Services
+## Step 7: Start Services
 
 ```bash
 cd /opt/struxa
@@ -128,12 +140,17 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod pull
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 ```
 
-Verify:
+## Step 8: Verify
 
 ```bash
 docker compose -f docker-compose.prod.yml ps
 ```
 
-## 8. Wings Setup (Optional)
+Both the `web` and `mysql` containers should show status `Up`.
 
-See [Wings Configuration](/wings/configuration) for writing `config.yml` and registering the node in the panel.
+## Docker Compose Services
+
+| Service | Image | Internal Port |
+|---|---|---|
+| `web` | `ghcr.io/struxadotcloud/struxa:latest` | `3001` |
+| `mysql` | `mysql:8.0` | `3306` (internal only) |

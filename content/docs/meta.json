@@ -1,11 +1,4 @@
 {
   "title": "Struxa",
-  "pages": [
-    "index",
-    "quick-install",
-    "manual-install",
-    "wings",
-    "panel",
-    "reference"
-  ]
+  "pages": ["index", "architecture", "roadmap", "---", "panel", "wings", "advanced"]
 }

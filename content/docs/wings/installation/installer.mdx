@@ -1,0 +1,55 @@
+---
+title: Installer
+description: Install Wings as part of the official automated installer.
+---
+
+The easiest way to install Wings is to select **Dashboard + Wings** during the [Panel installer](/panel/installation/installer). The installer sets up Wings on the same machine in one run, or you can point it at a separate node.
+
+## Run the Installer
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud)
+```
+
+When prompted for installation mode, choose **Dashboard + Wings**.
+
+## What the Installer Does for Wings
+
+1. **Downloads the Wings compose file** from `struxadotcloud/wings` on GitHub.
+2. **Asks for the Wings domain or IP** - the address the Panel will use to reach this node.
+3. **Asks for timezone, UID, and GID** - used for container permissions. Defaults to UTC / 988 / 988.
+4. **Writes `config.yml`** to `/opt/wings/config/config.yml` and `/etc/pterodactyl/config.yml`.
+5. **Configures a reverse proxy** for Wings on port 8080 (nginx, Apache, or Caddy).
+6. **Starts Wings** - the container comes up but will show as disconnected until you add the node token from the Panel.
+
+## Adding the Node Token
+
+Wings cannot connect to the Panel until it has a valid token. After the installer finishes:
+
+1. Log in to the Panel as admin
+2. Go to **Admin - Nodes - Create New Node**
+3. Fill in the FQDN and resource limits, save
+4. Open the **Configuration** tab and copy the generated `config.yml` block
+5. Paste it into `/etc/pterodactyl/config.yml` on the Wings host, replacing the placeholder values
+6. Restart Wings:
+   ```bash
+   cd /opt/wings && docker compose restart
+   ```
+
+The node should appear as connected in the Panel within 30 seconds.
+
+## Updating
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud) update
+```
+
+The updater handles both the Panel and Wings. Wings is updated by pulling the latest image and restarting the container.
+
+## What Gets Created
+
+| Path | Contents |
+|---|---|
+| `/opt/wings/compose.yml` | Wings compose file |
+| `/opt/wings/config/config.yml` | Wings configuration |
+| `/etc/pterodactyl/config.yml` | Symlinked system copy of the config |

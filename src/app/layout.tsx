@@ -1,7 +1,12 @@
-import { Cal_Sans, Geist_Mono } from 'next/font/google';
+import { Cal_Sans, Geist, Geist_Mono } from 'next/font/google';
 import { Provider } from '@/components/provider';
 import type { Metadata } from 'next';
 import './global.css';
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
 
 const calSans = Cal_Sans({
   variable: '--font-cal-sans',
@@ -30,7 +35,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${calSans.variable} ${geistMono.variable}`}
+      className={`${calSans.variable} ${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="flex flex-col min-h-screen antialiased">
         <Provider>{children}</Provider>

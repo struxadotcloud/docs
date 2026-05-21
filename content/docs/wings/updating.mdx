@@ -1,0 +1,38 @@
+﻿---
+title: Updating
+description: How to update Wings to a new version.
+---
+
+## Pull and Restart
+
+```bash
+cd /opt/wings
+docker compose pull
+docker compose up -d
+```
+
+## Viewing Logs
+
+```bash
+cd /opt/wings
+docker compose logs -f
+```
+
+## Restart After Config Changes
+
+If you edit `/etc/pterodactyl/config.yml`:
+
+```bash
+cd /opt/wings
+docker compose restart
+```
+
+## Stop and Start
+
+```bash
+# Stop Wings
+docker compose down
+
+# Start again
+docker compose up -d
+```

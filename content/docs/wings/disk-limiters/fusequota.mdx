@@ -1,0 +1,42 @@
+﻿---
+title: Fusequota
+description: FUSE-based user-space disk quota enforcement for Wings.
+---
+
+Fusequota is a user-space filesystem built on FUSE (Filesystem in Userspace) that enforces per-server disk limits. It works on top of whatever filesystem your server volumes already live on - ext4, XFS, network mounts, and others - without requiring native filesystem support for quotas.
+
+## How It Works
+
+Wings spawns a dedicated FUSE daemon process per server. The daemon intercepts all filesystem calls and tracks cumulative disk usage, rejecting writes that would exceed the configured server disk limit.
+
+## Strengths
+
+- Works on any filesystem type - no migration required
+- Existing server data does not need to be moved or reformatted
+- Compatible with standard server volume layouts
+
+## Limitations
+
+<Callout type="warn">
+  Fusequota is the slowest, least stable, and least compatible disk limiter available. Use a native limiter (Btrfs, ZFS, or XFS) whenever possible.
+</Callout>
+
+- **Performance** - FUSE operates in user-space, introducing overhead on every filesystem operation. High-I/O games (Minecraft chunk generation, database-heavy games) will see a measurable impact.
+- **Stability** - FUSE mounts can get stuck on process crash or unexpected restart, leaving server directories inaccessible until the mount is manually cleaned up.
+- **Game compatibility** - Some games and mods use filesystem operations that behave incorrectly under FUSE.
+- **Docker incompatibility** - Fusequota is strongly discouraged with Docker-based Wings installations. Docker restart cycles can leave orphaned FUSE mounts that require manual cleanup.
+
+## When to Use
+
+Use Fusequota only when your host filesystem does not support Btrfs, ZFS, or XFS project quotas, and you still need disk limit enforcement (e.g. in a shared or low-trust environment).
+
+## Configuration
+
+In `/etc/pterodactyl/config.yml`, set:
+
+```yaml
+system:
+  disk_limiter_mode: fuse_quota
+```
+
+Restart Wings after changing this value.

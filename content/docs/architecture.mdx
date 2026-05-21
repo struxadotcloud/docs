@@ -1,0 +1,72 @@
+﻿---
+title: Architecture
+description: How Panel, Wings, and the browser work together.
+---
+
+Struxa consists of two independently deployed services that communicate over HTTP and WebSocket.
+
+## Component Overview
+
+| Component | Language | Role |
+|-----------|----------|------|
+| Panel | Next.js / Node.js | Web UI, API, database, auth |
+| Wings | Rust | Node agent - manages containers on each host |
+| MySQL | - | Persistent storage for Panel |
+| Docker | - | Container runtime on each Wings host |
+
+## System Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Browser                                                     │
+│  → panel.example.com (HTTPS, port 443 via nginx → 3001)     │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ oRPC / HTTP (server-side)
+┌──────────────────────▼───────────────────────────────────────┐
+│  Panel (Docker, port 3001)                                   │
+│  Next.js 16 · Better Auth · oRPC · Drizzle ORM              │
+│  ──────────────────────────────────────────────────          │
+│  MySQL (Docker, port 3306 internal)                          │
+└───────────┬──────────────────────┬───────────────────────────┘
+            │ REST (port 8080)     │ WebSocket (console streams)
+            │                      │
+┌───────────▼──────────────────────▼───────────────────────────┐
+│  Wings node agent (Docker, port 8080 + 2022)                 │
+│  Rust · Axum · Tokio · Russh                                 │
+│  ──────────────────────────────────────────────────          │
+│  Docker socket (bind-mounted)                                │
+│  → manages sibling game server containers                    │
+└──────────────────────────────────────────────────────────────┘
+
+User SFTP → Wings :2022 → /var/lib/pterodactyl/<server-uuid>/
+```
+
+## Communication Flows
+
+### Panel → Wings
+The Panel makes REST calls to the Wings API (port 8080) to:
+- Create, start, stop, restart, and delete server containers
+- Trigger file operations (uploads, downloads, archive/extract)
+- Initiate and restore backups
+- Query server resource usage
+
+### Wings → Panel
+Wings opens a persistent WebSocket connection back to the Panel to:
+- Stream real-time console output
+- Push power state changes
+- Send resource usage metrics
+
+### User SFTP
+Users connect directly to Wings on port 2022 using their Panel credentials. Wings validates the credentials, then provides SFTP access to the server's file directory at `/var/lib/pterodactyl/<server-uuid>/`.
+
+## Deployment Topology
+
+In a typical production setup:
+
+- **Panel host** - runs the Panel container and MySQL container. Exposed via nginx on port 443.
+- **Wings host(s)** - one or more separate machines, each running a Wings container. Exposed via nginx on port 443 (proxied to 8080) and SFTP on port 2022.
+- **Game server containers** - run as Docker siblings of the Wings container on each Wings host.
+
+<Callout type="warn">
+  Wings should not run on the same host as the Panel in production. Resource contention between the Panel, MySQL, and game server containers causes instability.
+</Callout>

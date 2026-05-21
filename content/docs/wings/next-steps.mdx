@@ -1,0 +1,52 @@
+﻿---
+title: Next Steps
+description: After Wings is running and connected to the Panel.
+---
+
+## Add Port Allocations
+
+Allocations are IP:port pairs that the Panel assigns to game servers hosted on this node.
+
+1. Go to **Admin → Nodes → your node → Allocations**
+2. Enter the node's IP address and a port range (e.g. `25565–25600`)
+3. Save - these ports are now available when creating servers
+
+## Configure nginx on the Wings Host (Optional)
+
+For production, place nginx in front of Wings on port 443:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name node.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/node.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/node.example.com/privkey.pem;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection 'upgrade';
+        proxy_set_header   Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+}
+```
+
+## Test with a Game Server
+
+Create a test server from the Panel:
+
+1. Go to **Admin → Servers → Create Server**
+2. Assign it to your new Wings node and an allocation
+3. Select an egg, set resource limits, and create
+4. Start the server and verify the console output streams correctly
+
+## Monitor Wings Logs
+
+```bash
+cd /opt/wings
+docker compose logs -f
+```

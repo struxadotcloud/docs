@@ -1,0 +1,87 @@
+﻿---
+title: SSL Certificates
+description: Obtain and renew TLS certificates for the Panel and Wings using Let's Encrypt.
+---
+
+Both the Panel and each Wings node need a valid TLS certificate. The recommended approach is Let's Encrypt via Certbot.
+
+## Prerequisites
+
+- A domain name pointed at your server
+- Port 80 open on the host firewall (used for the ACME HTTP challenge)
+- nginx installed and serving the domain (or use the standalone method)
+
+## Install Certbot
+
+```bash
+apt install -y certbot python3-certbot-nginx
+```
+
+## Obtain a Certificate (nginx plugin)
+
+If nginx is already configured for the domain:
+
+```bash
+certbot --nginx -d panel.example.com --non-interactive --agree-tos \
+  -m you@example.com --redirect
+```
+
+Certbot will:
+1. Obtain a certificate via the HTTP-01 ACME challenge
+2. Automatically configure your nginx server block for HTTPS
+3. Add an HTTP → HTTPS redirect
+
+For Wings nodes, repeat with the node's domain:
+
+```bash
+certbot --nginx -d node.example.com --non-interactive --agree-tos \
+  -m you@example.com --redirect
+```
+
+## Obtain a Certificate (standalone)
+
+If nginx is not installed, use the standalone authenticator. Certbot temporarily binds to port 80:
+
+```bash
+certbot certonly --standalone -d panel.example.com \
+  --non-interactive --agree-tos -m you@example.com
+```
+
+Certificate files are placed in `/etc/letsencrypt/live/panel.example.com/`.
+
+## Automatic Renewal
+
+Certbot installs a systemd timer or cron job that renews certificates automatically before they expire. Verify it is active:
+
+```bash
+systemctl status certbot.timer
+```
+
+Test renewal without actually renewing:
+
+```bash
+certbot renew --dry-run
+```
+
+## Manual Renewal
+
+If automatic renewal is not configured:
+
+```bash
+certbot renew
+```
+
+After renewal, reload nginx to pick up the new certificate:
+
+```bash
+systemctl reload nginx
+```
+
+## Certificate Paths
+
+| File | Path |
+|------|------|
+| Full chain | `/etc/letsencrypt/live/<domain>/fullchain.pem` |
+| Private key | `/etc/letsencrypt/live/<domain>/privkey.pem` |
+
+Reference these paths in your nginx `ssl_certificate` and `ssl_certificate_key` directives.

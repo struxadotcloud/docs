@@ -1,0 +1,124 @@
+﻿---
+title: Reverse Proxies
+description: Put nginx, Apache, or Caddy in front of the Panel and Wings.
+---
+
+Both the Panel (port 3001) and Wings (port 8080) should run behind a reverse proxy in production. The proxy handles TLS termination and exposes services on standard ports 443/80.
+
+## Panel
+
+The Panel must be accessible over HTTPS. WebSocket connections (real-time console) require proper upgrade headers.
+
+### nginx
+
+```nginx
+server {
+    listen 80;
+    server_name panel.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name panel.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/panel.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/panel.example.com/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Robots-Tag none;
+
+    client_max_body_size 100m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection 'upgrade';
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+}
+```
+
+### Caddy
+
+```
+panel.example.com {
+    reverse_proxy localhost:3001
+}
+```
+
+Caddy handles TLS automatically via Let's Encrypt.
+
+### Trusted Proxies
+
+When the Panel sits behind a reverse proxy, set the `APP_TRUSTED_PROXIES` environment variable so the Panel can correctly resolve client IP addresses for activity logs and rate limiting:
+
+```bash
+APP_TRUSTED_PROXIES=127.0.0.1
+```
+
+For Docker networks, use the subnet of the Docker bridge (e.g. `172.17.0.0/16`).
+
+---
+
+## Wings
+
+Wings must be reachable from the Panel over HTTPS. The WebSocket connection for console streaming also requires upgrade headers.
+
+<Callout type="info">
+  SFTP (port 2022) connects directly to Wings and does not go through the reverse proxy. Ensure port 2022 is open on the Wings host firewall.
+</Callout>
+
+### nginx
+
+```nginx
+server {
+    listen 80;
+    server_name node.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name node.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/node.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/node.example.com/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    client_max_body_size 100m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection 'upgrade';
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+}
+```
+
+### Caddy
+
+```
+node.example.com {
+    reverse_proxy localhost:8080
+}
+```
+
+After placing Wings behind a proxy, update the node's FQDN in the Panel under **Admin → Nodes → your node** to match the proxy domain, and ensure the Panel's `APP_URL` is set to your panel domain so Wings can connect back.

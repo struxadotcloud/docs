@@ -1,0 +1,59 @@
+﻿---
+title: Btrfs Subvolume
+description: Native kernel disk quotas using Btrfs subvolumes.
+---
+
+Btrfs subvolumes provide native, kernel-level per-server disk limits with no user-space overhead. Each server's data directory is placed in its own Btrfs subvolume, and the quota is enforced by the kernel's Btrfs quota group (qgroup) system.
+
+## Requirements
+
+- Host filesystem must be formatted as Btrfs
+- The Wings server data directory (`/var/lib/pterodactyl/volumes` by default) must reside on the Btrfs filesystem
+- Btrfs tools: `btrfs-progs` package
+
+## How It Works
+
+When Wings creates a server, it creates a Btrfs subvolume at the server's data path and assigns a qgroup with the configured disk limit. The kernel enforces the limit natively - no daemon processes, no FUSE overhead.
+
+## Setup
+
+### 1. Verify Btrfs Filesystem
+
+```bash
+findmnt -T /var/lib/pterodactyl
+```
+
+The `FSTYPE` column should show `btrfs`. If it shows `ext4` or another type, Btrfs subvolumes are not available on this mount.
+
+### 2. Enable Btrfs Quotas
+
+```bash
+btrfs quota enable /var/lib/pterodactyl
+```
+
+### 3. Configure Wings
+
+In `/etc/pterodactyl/config.yml`:
+
+```yaml
+system:
+  disk_limiter_mode: btrfs_subvolume
+```
+
+Restart Wings after applying the change.
+
+## Migrating Existing Servers
+
+Existing server data directories are plain directories, not subvolumes. To migrate:
+
+1. Stop the server in the Panel
+2. Convert the directory to a subvolume:
+   ```bash
+   mv /var/lib/pterodactyl/volumes/<uuid> /var/lib/pterodactyl/volumes/<uuid>.bak
+   btrfs subvolume create /var/lib/pterodactyl/volumes/<uuid>
+   cp -a /var/lib/pterodactyl/volumes/<uuid>.bak/. /var/lib/pterodactyl/volumes/<uuid>/
+   rm -rf /var/lib/pterodactyl/volumes/<uuid>.bak
+   ```
+3. Start the server
+
+Wings will automatically assign a qgroup on next start.

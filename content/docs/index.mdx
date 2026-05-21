@@ -1,46 +1,36 @@
----
+﻿---
 title: Introduction
 description: Struxa is a self-hosted game server management platform.
 ---
 
-## What is Struxa?
+Struxa is a free, open-source game server management panel built for people who want to run their own infrastructure - without vendor lock-in, without paywalled features, and without compromising on control.
 
-Struxa is a self-hosted game server management platform consisting of three components:
+<img src="https://github.com/struxadotcloud/struxa/blob/development/.github/uploads/preview-small.jpeg?raw=true" alt="Struxa panel preview" style={{ width: '100%', borderRadius: '8px' }} />
 
-- **Panel** — A Next.js dashboard for managing game servers, users, nodes, and billing. Dark ops aesthetic, built for operators.
-- **Wings** — A Rust-based node agent that runs on each game server host. Manages Docker containers over REST, WebSocket, and SFTP.
-- **Installer** — A single-command Bash script that provisions Docker, configures nginx/SSL, and starts all services.
+## Why Struxa?
 
-## Architecture
+Most game server panels are either too limited for serious use or too expensive to run at scale. Struxa takes a different approach: a clean, modern UI backed by a fast, native node agent - built on technology that doesn't get in the way.
 
-```
-┌─────────────────────────────────────────────────┐
-│  Browser                                        │
-│  → panel.example.com (Next.js, port 3001)       │
-└──────────────────────┬──────────────────────────┘
-                       │ oRPC / HTTP
-┌──────────────────────▼──────────────────────────┐
-│  Struxa Panel (Docker)                          │
-│  MySQL database                                 │
-└──────────────────────┬──────────────────────────┘
-                       │ REST + WebSocket (port 8080)
-┌──────────────────────▼──────────────────────────┐
-│  Wings node agent (Docker, per game server host)│
-│  → Manages game server containers via Docker    │
-└─────────────────────────────────────────────────┘
-```
+- **Full stack you own** - Panel, Wings, and database all self-hosted. No cloud dependency, no calling home.
+- **Pterodactyl-compatible** - Existing eggs, nests, and Wings configs work without modification. Migration is a drop-in.
+- **No feature tiers** - Everything is available to everyone. Schedules, backups, SFTP, multi-node - all included.
+- **Built to last** - Next.js frontend, Rust node agent, MySQL persistence. Boring, proven technology chosen for reliability over novelty.
 
-## Prerequisites
+## How It Works
 
-- Linux VPS (Ubuntu 22.04+ or Debian 12+ recommended)
-- Root access
-- A domain name pointing to your server
-- `curl` and `openssl` installed
-- Docker (auto-installed by the installer if missing)
+Struxa has two components you deploy yourself:
 
-## Get Started
+**Panel** - the web interface. Manages users, nodes, eggs, schedules, and backups. Runs as a Docker container alongside MySQL. Operators and end users interact with everything through here.
 
-<Cards>
-  <Card title="Quick Install" href="/quick-install" description="One command — let the installer handle everything." />
-  <Card title="Manual Install" href="/manual-install" description="Full control over every step." />
-</Cards>
+**Wings** - the node agent. Runs on each machine that hosts game servers. Receives instructions from the Panel, manages Docker containers, streams console output, and handles SFTP. Built in Rust for low overhead across many concurrent servers.
+
+The two communicate over a secured REST + WebSocket connection. You control the network, the data, and the infrastructure.
+
+## Who It's For
+
+Struxa is designed for:
+
+- **Hosting providers** running fleets of game servers for customers
+- **Communities** self-hosting servers for their members
+- **Homelab operators** who want full control without the Pterodactyl PHP stack
+

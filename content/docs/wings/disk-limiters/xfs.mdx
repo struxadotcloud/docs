@@ -1,0 +1,61 @@
+﻿---
+title: XFS Project Quota
+description: Native kernel disk quotas using XFS project quotas.
+---
+
+XFS project quotas enforce per-directory disk limits at the kernel level using XFS's built-in project quota system. Each server's data directory is assigned an XFS project ID, and the quota is enforced natively - no FUSE overhead.
+
+## Requirements
+
+- Host filesystem must be formatted as XFS
+- XFS must be mounted with the `prjquota` option
+- XFS tools: `xfsprogs` package
+
+## How It Works
+
+Wings assigns a unique XFS project ID to each server's data directory and sets a project quota equal to the configured disk limit. The XFS kernel module tracks and enforces usage per project, covering all files within the directory tree.
+
+## Setup
+
+### 1. Verify XFS Filesystem
+
+```bash
+findmnt -T /var/lib/pterodactyl
+```
+
+The `FSTYPE` column must show `xfs`.
+
+### 2. Enable Project Quotas at Mount Time
+
+Edit `/etc/fstab` to add the `prjquota` mount option for the XFS partition:
+
+```
+/dev/sdX  /var/lib/pterodactyl  xfs  defaults,prjquota  0  0
+```
+
+Remount the filesystem (or reboot):
+
+```bash
+mount -o remount,prjquota /var/lib/pterodactyl
+```
+
+Verify quotas are active:
+
+```bash
+xfs_quota -x -c 'state' /var/lib/pterodactyl
+```
+
+The output should show `Project quota state on`.
+
+### 3. Configure Wings
+
+In `/etc/pterodactyl/config.yml`:
+
+```yaml
+system:
+  disk_limiter_mode: xfs_project_quota
+```
+
+Restart Wings after applying the change.
+
+Wings automatically assigns project IDs and sets quotas when servers are created or updated. No manual per-server configuration is needed.

@@ -1,0 +1,61 @@
+﻿---
+title: ZFS Dataset
+description: Native kernel disk quotas using ZFS datasets.
+---
+
+ZFS datasets provide native per-server disk quotas via ZFS's built-in `quota` property. Each server's data directory is a ZFS dataset, and the quota is enforced by the ZFS kernel module - no user-space overhead, no FUSE.
+
+## Requirements
+
+- Host must have ZFS installed (`zfsutils-linux` package on Debian/Ubuntu)
+- The Wings server data path must reside on a ZFS pool
+- Root access (ZFS dataset management requires root)
+
+## How It Works
+
+When Wings creates a server, it creates a ZFS dataset at the server's data path and sets the `quota` property to the configured disk limit. The ZFS kernel module enforces the limit at the filesystem level.
+
+## Setup
+
+### 1. Verify ZFS Pool
+
+```bash
+zfs list
+```
+
+Confirm the pool that contains (or will contain) `/var/lib/pterodactyl/volumes` is listed.
+
+### 2. Create the Base Dataset (if not already on ZFS)
+
+```bash
+zfs create <poolname>/pterodactyl
+zfs set mountpoint=/var/lib/pterodactyl <poolname>/pterodactyl
+```
+
+### 3. Configure Wings
+
+In `/etc/pterodactyl/config.yml`:
+
+```yaml
+system:
+  disk_limiter_mode: zfs_dataset
+```
+
+Restart Wings after applying the change.
+
+## Migrating Existing Servers
+
+1. Stop the server in the Panel
+2. Create a dataset and move the data:
+   ```bash
+   zfs create <poolname>/pterodactyl/volumes/<uuid>
+   cp -a /var/lib/pterodactyl/volumes/<uuid>/. /mnt/temp-<uuid>/
+   # (adjust paths as needed for your pool layout)
+   ```
+3. Set the quota:
+   ```bash
+   zfs set quota=<limit>G <poolname>/pterodactyl/volumes/<uuid>
+   ```
+4. Start the server
+
+Wings sets the quota automatically on next server start, so step 3 is handled by Wings once the dataset exists.

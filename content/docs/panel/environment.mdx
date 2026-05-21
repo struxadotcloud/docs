@@ -1,0 +1,81 @@
+﻿---
+title: Environment Variables
+description: Complete reference for all Panel environment variables.
+---
+
+All variables live in `/opt/struxa/.env.prod`. The installer generates this file automatically. It is `chmod 600` - keep it secret and never commit it.
+
+## Required
+
+```bash
+# Application URLs - set all three to the same public panel URL
+APP_URL=https://panel.example.com
+BETTER_AUTH_URL=https://panel.example.com
+CORS_ORIGIN=https://panel.example.com
+
+# Database connection string
+DATABASE_URL=mysql://struxa:password@mysql:3306/struxa
+
+# Signs session tokens - 32+ byte random hex, never reuse across environments
+BETTER_AUTH_SECRET=
+
+# Encrypts sensitive columns at rest - 64 hex chars (32 bytes)
+DATABASE_ENCRYPTION_KEY=
+
+# RSA 2048-bit key pair - signs and verifies tokens issued to Wings
+JWT_PRIVATE_KEY=   # base64-encoded private key
+JWT_PUBLIC_KEY=    # base64-encoded public key
+```
+
+## MySQL Container
+
+```bash
+MYSQL_ROOT_PASSWORD=
+MYSQL_DATABASE=struxa
+MYSQL_USER=struxa
+MYSQL_PASSWORD=
+```
+
+## Docker Compose
+
+```bash
+# GitHub org for the container image registry
+GITHUB_REPOSITORY_OWNER=struxadotcloud
+
+# Image tag to pull - pin to a release tag for stability
+IMAGE_TAG=latest
+```
+
+## Optional
+
+```bash
+# Cloudflare Turnstile - enables CAPTCHA on login/register when set
+TURNSTILE_SECRET_KEY=
+
+# Always "production" in Docker
+NODE_ENV=production
+
+# Set to 1 to skip startup env validation (not recommended)
+SKIP_ENV_VALIDATION=
+```
+
+## Regenerating Secrets
+
+```bash
+# New Better Auth secret
+openssl rand -hex 32
+
+# New database encryption key (64 hex chars)
+openssl rand -hex 32
+
+# New RSA key pair
+openssl genrsa -out /tmp/priv.pem 2048
+openssl rsa -in /tmp/priv.pem -pubout -out /tmp/pub.pem
+base64 -w0 < /tmp/priv.pem   # → JWT_PRIVATE_KEY
+base64 -w0 < /tmp/pub.pem    # → JWT_PUBLIC_KEY
+rm /tmp/priv.pem /tmp/pub.pem
+```
+
+<Callout type="error">
+  Rotating `DATABASE_ENCRYPTION_KEY` without a migration will make all existing encrypted data unreadable. Only rotate it on a fresh install or with a dedicated migration script.
+</Callout>

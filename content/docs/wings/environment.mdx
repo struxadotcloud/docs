@@ -1,0 +1,62 @@
+﻿---
+title: Environment
+description: Configuration reference for the Wings node agent.
+---
+
+Wings is configured via `/etc/pterodactyl/config.yml`. The installer symlinks this from `/opt/wings/config/config.yml`. There are no environment variables - all configuration lives in this file.
+
+## Generating `config.yml` from the Panel
+
+<Callout type="info">
+  The easiest way to get a valid `config.yml` is to generate it from the Panel after creating a node.
+</Callout>
+
+1. Log in to the Struxa Panel as an admin
+2. Go to **Admin → Nodes → your node → Configuration** tab
+3. Copy the generated `config.yml` content
+4. Paste it into `/etc/pterodactyl/config.yml` on the Wings host
+
+## Minimal `config.yml`
+
+```yaml
+debug: false
+uuid: ""          # auto-populated by Wings on first connection
+token_id: ""      # from Panel → Admin → Nodes → Configuration
+token: ""         # from Panel → Admin → Nodes → Configuration
+api:
+  host: 0.0.0.0
+  port: 8080
+system:
+  root_directory: /var/lib/pterodactyl
+  username: pterodactyl
+  timezone: UTC
+  user:
+    uid: 988
+    gid: 988
+  sftp:
+    enabled: true
+    bind_port: 2022
+docker:
+  socket: /var/run/docker.sock
+  network:
+    name: pterodactyl_nw
+    driver: bridge
+remote: https://panel.example.com
+```
+
+## Key Configuration Fields
+
+| Field | Default | Description |
+|---|---|---|
+| `api.port` | `8080` | Port Wings listens on for Panel communication |
+| `system.timezone` | `UTC` | Timezone for server logs and schedules |
+| `system.user.uid` / `gid` | `988` | UID/GID of the Wings system user |
+| `system.sftp.bind_port` | `2022` | SFTP port for file access |
+| `docker.socket` | `/var/run/docker.sock` | Path to the Docker socket |
+| `remote` | - | Full URL of the Struxa Panel (must match `APP_URL`) |
+| `throttles.lines` | `2000` | Max console lines per interval before throttling |
+| `throttles.line_reset_interval` | `500` | Throttle reset interval in milliseconds |
+
+<Callout type="info">
+  The `uuid` field is populated automatically by Wings the first time it successfully connects to the Panel. Do not set it manually.
+</Callout>

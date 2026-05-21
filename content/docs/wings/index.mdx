@@ -1,26 +1,41 @@
----
-title: Wings Overview
-description: Wings is the Struxa node agent — a Rust service that manages game server containers on each host.
+﻿---
+title: Overview
+description: Wings is the Struxa node agent - a Rust service that manages game server containers on each host.
 ---
 
-Wings is the node agent component of Struxa. It runs on each physical or virtual machine that hosts game servers. The panel communicates with Wings over HTTP REST and WebSockets.
+Wings is the node agent component of Struxa. It runs on each physical or virtual machine that hosts game servers. The Panel communicates with Wings over HTTP REST and WebSockets.
 
 ## What Wings Does
 
 - Manages game server Docker containers (create, start, stop, restart, delete)
-- Streams real-time console output to the panel via WebSocket
+- Streams real-time console output to the Panel via WebSocket
 - Provides SFTP access to server files (port 2022 by default)
 - Handles file operations: uploads, downloads, decompression, compression
 - Manages backups: local, S3-compatible, restic, btrfs, zfs
-- Reports resource usage (CPU, RAM, disk, network) back to the panel
+- Reports resource usage (CPU, RAM, disk, network) back to the Panel
 - Enforces resource limits (memory, CPU, disk quotas per server)
 
 ## Ports Used
 
 | Port | Protocol | Purpose |
 |------|----------|---------|
-| 8080 | HTTP / WebSocket | Wings API — panel communicates here |
+| 8080 | HTTP / WebSocket | Wings API - Panel communicates here |
 | 2022 | SSH / SFTP | File access to game server files |
+
+## System Requirements
+
+| | Minimum | Recommended |
+|---|---|---|
+| **OS** | Ubuntu 22.04+, Debian 11+, or any Linux distribution with modern Docker support | Ubuntu 22.04 LTS |
+| **Architecture** | x86_64, ARM64, RISC-V, or PPC64LE | x86_64 or ARM64 |
+| **RAM** | 512 MB | 1 GB+ |
+| **Disk** | 256 MB | 1 GB+ |
+
+Docker is required. Wings uses Docker to run and isolate game server containers - it must be installed and running on the host. The requirements above do not include resources needed by game servers themselves; those are additive.
+
+<Callout type="info">
+  Only Linux is officially supported. Windows is not supported due to Unix-specific feature dependencies.
+</Callout>
 
 ## Runtime
 
@@ -38,8 +53,3 @@ User  ──SFTP :2022──────────► Wings SFTP ──► /va
 
 Wings is a Rust rewrite of Pterodactyl Wings with 100% API compatibility. Any Pterodactyl egg, nest, or node configuration will work with Struxa Wings without modification.
 
-## Next Steps
-
-<Cards>
-  <Card title="Wings Configuration" href="/wings/configuration" description="Set up config.yml and register the node in the panel." />
-</Cards>
