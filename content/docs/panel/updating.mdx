@@ -3,9 +3,28 @@ title: Updating
 description: How to update the Struxa Panel to a new version.
 ---
 
-## Before You Update
+## Using the Installer Script
 
-- Read the [Changelogs](/changelogs) for breaking changes
+If you installed with the official script, updating is a single command:
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud) update
+```
+
+This reads the current version from `/opt/struxa/.env.prod`, fetches the latest release tag, updates the image, pulls, and restarts automatically.
+
+For the nightly channel:
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud) update --nightly
+```
+
+## Manual Update
+
+If you prefer to update manually:
+
+### Before You Update
+
 - Back up your database if doing a major version upgrade
 
 ## Pull and Restart
