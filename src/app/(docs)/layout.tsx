@@ -9,8 +9,8 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       {...baseOptions()}
       tabMode="navbar"
       tabs={[
-        { title: 'Docs', url: '/docs' },
-        { title: 'Extensions', url: '/docs/extensions' },
+        { title: 'Docs', url: '/' },
+        { title: 'Extensions', url: '/extensions' },
       ]}
     >
       {children}
