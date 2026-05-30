@@ -1,0 +1,148 @@
+---
+title: Publishing & Registry
+description: How to publish a Struxa extension to a registry so it can be discovered and installed from the admin panel.
+---
+
+Extensions are distributed through a **registry** — a static JSON index and a set of signed tarballs. The panel fetches the index when an admin opens the Discover tab and downloads tarballs on install.
+
+Struxa provides an [open-source reference registry](https://github.com/struxadotcloud/registry) you can fork and self-host on GitHub Pages (or any static host).
+
+## Registry structure
+
+```
+registry/
+├── packages/                 # one subdirectory per extension
+│   └── my-ext/               # your extension's built output
+│       ├── manifest.json
+│       ├── server/
+│       ├── web/
+│       └── migrations/       # if using db:own
+├── scripts/
+│   ├── build.mjs             # packs tarballs and writes dist/index.json
+│   └── gen-keys.mjs          # generates the Ed25519 signing key pair
+├── keys/
+│   └── registry_private.pem  # local signing key (never commit)
+└── dist/                     # generated output — deploy this
+    ├── index.json
+    └── tarballs/
+        └── my-ext-1.0.0.tgz
+```
+
+`dist/` is never committed. The build script regenerates it each time and it is deployed to GitHub Pages via CI.
+
+## Step 1 — Set up the registry
+
+Fork or clone the reference registry and generate a signing key pair:
+
+```bash
+npm run gen-keys
+```
+
+This creates:
+- `keys/registry_private.pem` — keep this secret; used to sign tarballs locally
+- `keys/registry_public.pem` — the matching public key
+
+Set the `REGISTRY_PRIVATE_KEY` environment variable in your GitHub repository secrets (base64-encoded PEM from the script's output). The public key must be set in your panel's `EXTENSION_REGISTRY_PUBLIC_KEY` environment variable so the host can verify tarball signatures.
+
+<Callout type="warn">
+  Never commit `registry_private.pem`. Add `keys/` to `.gitignore`. If the private key is ever exposed, regenerate the key pair and re-sign all extensions.
+</Callout>
+
+## Step 2 — Build your extension
+
+```bash
+cd my-ext
+npm run build
+```
+
+This produces `dist/` containing the manifest, server bundle, web assets, and any migrations.
+
+## Step 3 — Add to the registry
+
+Copy the built output into the registry's `packages/` directory:
+
+```bash
+cp -r my-ext/dist registry/packages/my-ext
+```
+
+Alternatively, use a git submodule so the extension repo and registry stay in sync:
+
+```bash
+cd registry
+git submodule add https://github.com/yourorg/my-ext packages/my-ext
+```
+
+In this case the build script automatically detects that `packages/my-ext/dist/manifest.json` exists and uses the `dist/` subdirectory as the package root.
+
+## Step 4 — Build the registry
+
+```bash
+cd registry
+npm run build
+```
+
+The build script:
+1. Discovers every subdirectory in `packages/`
+2. Reads `manifest.json` from each
+3. Packs the allowed files (`manifest.json`, `server/`, `web/`, `migrations/`, `messages/`, `icon.svg`) into a gzip tarball
+4. Signs each tarball with the private key (Ed25519)
+5. Writes `dist/index.json` with metadata and tarball paths for all extensions
+
+## Step 5 — Deploy
+
+Push to the repository. The included GitHub Actions workflow deploys `dist/` to GitHub Pages on every push to `main`.
+
+Once deployed, the registry is accessible at `https://<org>.github.io/<repo>/` (or your custom domain). Set this URL as the `EXTENSION_REGISTRY_URL` environment variable in your panel.
+
+## Step 6 — Install from the admin panel
+
+1. Navigate to **Admin → Extensions → Discover**
+2. Your extension appears in the grid after the panel fetches the updated index
+3. Click **Details** — review the permissions, description, and changelog
+4. Click **Install** — the panel downloads and verifies the tarball, runs migrations, and enables the extension
+5. The extension appears in **Admin → Extensions → Installed** and in the panel sidebar
+
+## Updating an extension
+
+1. Increment `version` in `manifest.json` (semver)
+2. Run `npm run build` in the extension project
+3. Copy the new `dist/` to the registry and rebuild
+4. Push the registry
+5. In the admin panel, the **Installed** tab shows an **Update** button for the extension
+
+Migrations run automatically on update. The host tracks which migration files have been applied by content hash, so only new files are executed.
+
+## Migrations
+
+If your extension uses `db:own`, place SQL migration files in `migrations/`:
+
+```
+migrations/
+└── 0000_init.sql
+```
+
+Filenames are sorted lexicographically — use a zero-padded numeric prefix to control order. Each file is run once, identified by a SHA-256 hash of its contents. Files are never re-run even if renamed.
+
+```sql title="migrations/0000_init.sql"
+-- Tables must be prefixed ext_my_ext_
+CREATE TABLE ext_my_ext_items (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+<Callout type="warn">
+  Never modify a migration file after it has been deployed. The host uses a content hash to track applied migrations — changing a file's content makes the host treat it as a new migration and run it again, which will fail if the table already exists.
+</Callout>
+
+## Versioning
+
+Follow semver. The host enforces that the installed version matches the registry entry exactly at install time. Use `struxaApi` in `manifest.json` to declare which panel API versions your extension supports:
+
+```json
+{
+  "struxaApi": "^1.0.0"
+}
+```
+
+The panel rejects installation if the running panel version falls outside this range.

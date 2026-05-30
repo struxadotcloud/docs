@@ -1,0 +1,155 @@
+---
+title: Quickstart
+description: Scaffold, build, and install your first Struxa extension in under ten minutes.
+---
+
+This guide takes you from zero to a working extension installed in a running Struxa panel.
+
+## Prerequisites
+
+- Node.js 18+ or Bun
+- A running Struxa panel you can access as an admin
+- A registry you control (see [Publishing](/docs/extensions/publishing))
+
+## 1. Scaffold the project
+
+```bash
+npm create struxa-extension@latest my-ext
+```
+
+The interactive CLI asks for a directory, extension id, display name, template (React or vanilla), and optional features (database tables, widget slots, lifecycle hooks). Accept the defaults for a minimal React extension.
+
+```
+◆  Create a Struxa Extension
+│
+◇  Target directory
+│  my-ext
+│
+◇  Extension id
+│  my-ext
+│
+◇  Display name
+│  My Ext
+│
+◇  Template
+│  React
+│
+◇  Add features
+│  (none selected)
+│
+◇  Done.
+│
+└─ Next steps:
+     cd my-ext
+     npm install
+     npm run build
+```
+
+## 2. Inspect the project
+
+```
+my-ext/
+├── manifest.json        # id, permissions, UI pages
+├── server/
+│   └── index.js        # register(ctx) — server entry
+├── src/
+│   ├── App.tsx          # React root component
+│   ├── main.tsx         # entry point  →  dist/web/bundle.js
+│   └── page.html        # HTML shell served by the panel
+└── package.json
+```
+
+**`manifest.json`** declares what the extension is and what it needs:
+
+```json
+{
+  "id": "my-ext",
+  "name": "My Ext",
+  "version": "1.0.0",
+  "struxaApi": "^1.0.0",
+  "permissions": ["api:protected"],
+  "ui": {
+    "pages": [
+      { "route": "/my-ext", "section": "panel", "label": "My Ext", "icon": "Blocks" }
+    ]
+  }
+}
+```
+
+**`server/index.js`** exports a `register` function called by the host at startup:
+
+```js
+export async function register(ctx) {
+  const router = ctx.procedures.protectedProcedure
+    .prefix('ext.my-ext')
+    .router({
+      ping: ctx.procedures.protectedProcedure.handler(async () => ({ pong: true })),
+    });
+  return { router };
+}
+```
+
+**`src/App.tsx`** is a standard React component. Call the host using the bridge:
+
+```tsx
+import { createHostClient } from '@struxa/extension-sdk/client';
+
+const client = createHostClient({
+  ping: {} as { input: void; output: { pong: boolean } },
+});
+
+export function App() {
+  const [result, setResult] = useState<string>('');
+  return (
+    <button onClick={async () => {
+      const res = await client.ping();
+      setResult(String(res.pong));
+    }}>
+      Ping — {result}
+    </button>
+  );
+}
+```
+
+## 3. Install dependencies and build
+
+```bash
+cd my-ext
+npm install
+npm run build
+```
+
+This produces `dist/` containing:
+
+```
+dist/
+├── manifest.json
+├── server/
+│   └── index.js
+└── web/
+    ├── index.html
+    └── bundle.js
+```
+
+## 4. Add to the registry
+
+Copy `dist/` to a `packages/my-ext/` folder in your registry repo, then run the registry build:
+
+```bash
+# inside your registry repo
+cp -r /path/to/my-ext/dist packages/my-ext
+npm run build    # → generates dist/index.json + signed tarballs
+```
+
+Push the registry. The panel fetches the updated index on the next discover refresh. See [Publishing](/docs/extensions/publishing) for a full walkthrough.
+
+## 5. Install from the admin panel
+
+1. Log in as an admin and navigate to **Admin → Extensions**
+2. Open the **Discover** tab — your extension appears in the grid
+3. Click **Details**, review the permissions, click **Install**
+4. The extension appears in the **Installed** tab and in the panel sidebar
+
+<Callout type="info">
+  The panel fetches the registry index when you open the Discover tab. If your extension doesn't appear immediately, check that the registry URL is configured correctly in your panel environment variables.
+</Callout>

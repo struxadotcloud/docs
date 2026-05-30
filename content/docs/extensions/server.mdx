@@ -1,0 +1,168 @@
+---
+title: Server Entry
+description: How to write the server-side register(ctx) function that runs inside the Struxa panel process.
+---
+
+Every extension has a server entry at `server/index.js` (or `server/index.ts`). The host calls `register(ctx)` once at startup and uses the returned router to mount the extension's API.
+
+## Contract
+
+```js
+/**
+ * @param {import('@struxa/extension-sdk/server').ExtensionContext} ctx
+ * @returns {{ router: import('@orpc/server').AnyRouter }}
+ */
+export async function register(ctx) {
+  // … set up hooks, subscriptions, etc.
+  const router = { /* oRPC router */ };
+  return { router };
+}
+```
+
+- The function must be a named export (`export async function register`).
+- The return value must include a `router` property. Return an empty object `{}` for the router if you have no procedures.
+- The function runs once. Do not return a cleanup function — if you open connections, close them on process exit.
+
+## Context API
+
+The `ctx` object passed to `register` is scoped to the permissions declared in `manifest.json`. Properties for unpermitted capabilities are `undefined`.
+
+### `ctx.extId` / `ctx.version`
+
+```js
+ctx.extId    // "my-ext"
+ctx.version  // "1.0.0"
+```
+
+Always available. Use `extId` as a stable namespace key.
+
+### `ctx.logger`
+
+Always available. Prefixes every log line with `[ext:my-ext]`.
+
+```js
+ctx.logger.info('starting up');
+ctx.logger.warn('something looks off', { detail: 42 });
+ctx.logger.error('failed', { err });
+```
+
+### `ctx.procedures` — requires `api:*`
+
+Provides oRPC procedure builders capped at the highest `api:*` permission granted:
+
+| Permission | Available builders |
+|---|---|
+| `api:public` | `publicProcedure` |
+| `api:protected` | `publicProcedure`, `protectedProcedure` |
+| `api:admin` | all three |
+
+```js
+export async function register(ctx) {
+  const { protectedProcedure } = ctx.procedures;
+
+  const router = {
+    ping: protectedProcedure.handler(async () => ({ pong: true })),
+    greet: protectedProcedure.input(z.object({ name: z.string() }))
+      .handler(async ({ input }) => ({ message: `Hello, ${input.name}!` })),
+  };
+
+  return { router };
+}
+```
+
+The router is mounted under `ext.<id>.*` in the panel's global oRPC tree. Clients reach it at `orpc.ext["my-ext"].ping`.
+
+### `ctx.hooks` — requires `hook:<event>`
+
+Subscribe to panel events. Subscriptions take effect as soon as `register` runs.
+
+```js
+ctx.hooks.on('server.created', async ({ server }) => {
+  ctx.logger.info('new server', { id: server.id });
+});
+```
+
+Available events:
+
+| Event | Payload |
+|---|---|
+| `server.created` | `{ server: { id, name, ... } }` |
+
+Subscribing to an event without the matching `hook:<event>` permission logs a warning and does nothing.
+
+### `ctx.db` — requires `db:own`
+
+A Drizzle ORM client connected to the panel's MySQL instance. Your extension owns tables prefixed `ext_<id>_`. These tables must be created via migrations (see [Publishing](/docs/extensions/publishing#migrations)).
+
+```js
+import { sql } from 'drizzle-orm';
+
+export async function register(ctx) {
+  const rows = await ctx.db.execute(
+    sql`SELECT * FROM ext_my_ext_items LIMIT 10`
+  );
+  // ...
+}
+```
+
+<Callout type="warn">
+  Only access tables with the `ext_<id>_` prefix. The host does not enforce this at the query level — writing to other tables will corrupt shared data.
+</Callout>
+
+### `ctx.coreMeta` — requires `core.metadata:<entity>`
+
+Read and write a namespaced slice of a panel entity's JSON `metadata` column. Each extension gets its own key inside the object — reads and writes are atomic and never touch other extensions' data.
+
+```js
+// Read metadata for a server
+const meta = await ctx.coreMeta.server.get(serverId);
+// meta is null or { ...yourData }
+
+// Merge a patch into the stored metadata
+await ctx.coreMeta.server.set(serverId, { lastSeen: Date.now() });
+```
+
+Available entities: `server`, `node`, `user` — each requires its own `core.metadata:<entity>` permission.
+
+### `ctx.settings` — requires `settings`
+
+A simple key/value store scoped to `ext:<id>:*`. Values are strings.
+
+```js
+// Write a setting
+await ctx.settings.set('webhook_url', 'https://hooks.example.com/123');
+
+// Read a setting (returns null if not set)
+const url = await ctx.settings.get('webhook_url');
+
+// Read all settings as a plain object (keys are un-namespaced)
+const all = await ctx.settings.all();
+// { webhook_url: 'https://...' }
+```
+
+## Full example
+
+```js
+import { z } from 'zod';
+
+export async function register(ctx) {
+  // Subscribe to server creation events
+  ctx.hooks.on('server.created', async ({ server }) => {
+    await ctx.coreMeta.server.set(server.id, { registeredAt: Date.now() });
+    ctx.logger.info('tracked new server', { id: server.id });
+  });
+
+  const { protectedProcedure } = ctx.procedures;
+
+  const router = {
+    getInfo: protectedProcedure
+      .input(z.object({ serverId: z.string() }))
+      .handler(async ({ input }) => {
+        const meta = await ctx.coreMeta.server.get(input.serverId);
+        return { meta };
+      }),
+  };
+
+  return { router };
+}
+```

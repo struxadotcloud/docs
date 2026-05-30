@@ -1,0 +1,62 @@
+---
+title: Extensions
+description: Struxa extensions are installable plugins that add UI pages, widget slots, server-side procedures, event hooks, and their own database tables to a Struxa instance.
+---
+
+Struxa extensions are installable plugins that let you ship new functionality directly into a running panel without touching panel source code. An extension can register its own API routes, subscribe to lifecycle events, own database tables, inject UI pages and sidebar entries, and embed widgets into existing panel pages.
+
+## What an extension can do
+
+| Capability | What you get |
+|---|---|
+| **UI pages** | A full-page React app served inside an iframe at `/<ext-id>/*` — appears in the sidebar |
+| **Widget slots** | A React component injected into a named panel slot (e.g. `server.overview.after`) |
+| **Server procedures** | Type-safe oRPC routes callable from your UI via the host bridge |
+| **Event hooks** | Subscribe to panel events like `server.created` to run side effects |
+| **Database tables** | Own MySQL tables (prefixed `ext_<id>_`) managed via Drizzle ORM |
+| **Scoped settings** | Key/value store namespaced to your extension |
+| **Entity metadata** | Read/write a namespaced slice of `server`, `node`, or `user` metadata |
+
+## Architecture
+
+The host loads extensions at startup. For each installed and enabled extension it:
+
+1. Reads `manifest.json` to validate permissions and API compatibility
+2. Runs pending SQL migrations from the extension's `migrations/` directory
+3. Calls `register(ctx)` in `server/index.js`, passing a capability-scoped context object
+4. Mounts the extension's oRPC router under `ext.<id>.*` in the panel's API
+5. Registers any declared UI pages and widget slots so they appear in the sidebar
+
+The UI runs in an `<iframe>` sandboxed inside the panel. Extension code communicates with the server entry by posting structured messages through a host bridge — the iframe never has direct DOM access to the panel shell.
+
+```
+┌─────────────────────────────────────┐
+│  Struxa Panel                        │
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │  Extension Host (Node.js)      │  │
+│  │  • loads server/index.js       │  │
+│  │  • injects ctx (db, hooks, …)  │  │
+│  │  • mounts ext.<id>.* router    │  │
+│  └────────────┬───────────────────┘  │
+│               │ oRPC                  │
+│  ┌────────────▼───────────────────┐  │
+│  │  <iframe> — extension UI       │  │
+│  │  • React app built to dist/    │  │
+│  │  • talks to host via bridge    │  │
+│  └────────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+## Extension lifecycle
+
+1. **Discover** — the panel fetches `index.json` from the configured registry URL
+2. **Install** — the panel downloads and verifies the signed tarball, runs migrations
+3. **Enable** — the host loads the server entry and mounts the UI
+4. **Disable** — the server entry is unloaded; the UI disappears from the sidebar
+5. **Update** — same as install; migrations are run for new files only (by content hash)
+6. **Uninstall** — the extension files are removed; database tables are left intact
+
+## Getting started
+
+Head to [Quickstart](/docs/extensions/quickstart) to scaffold and run your first extension in under ten minutes.

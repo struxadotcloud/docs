@@ -1,0 +1,121 @@
+---
+title: Manifest Reference
+description: Complete reference for the manifest.json file that every Struxa extension must include.
+---
+
+Every extension must include a `manifest.json` at the root of its `dist/` output. The host validates this file on install and on every boot.
+
+## Top-level fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | yes | Unique extension identifier. Lowercase letters, digits, and hyphens only (`[a-z][a-z0-9-]{1,62}`). Used as a URL segment and DB table prefix. |
+| `name` | `string` | yes | Human-readable display name shown in the admin UI. |
+| `version` | `string` | yes | Semver version string (`1.2.3`). Must increase on every publish. |
+| `description` | `string` | no | Short description shown in the Discover grid. |
+| `author` | `string` | no | Author name shown in the extension card. |
+| `struxaApi` | `string` | yes | Semver range of the Struxa API this extension requires (e.g. `"^1.0.0"`). The host rejects extensions whose `struxaApi` range does not match the running panel version. |
+| `permissions` | `string[]` | no | List of capabilities this extension requests. Defaults to `[]`. |
+| `ui` | `object` | no | UI configuration — pages and widget slots. |
+
+## Permissions
+
+The `permissions` array declares every capability the extension needs. The host grants only what is listed; accessing an undeclared capability is silently ignored (no error thrown).
+
+| Permission | What it grants |
+|---|---|
+| `db:own` | Drizzle DB client (`ctx.db`) for tables prefixed `ext_<id>_` |
+| `api:public` | oRPC `publicProcedure` builder (unauthenticated routes) |
+| `api:protected` | oRPC `protectedProcedure` builder (session required) |
+| `api:admin` | oRPC `adminProcedure` builder (admin role required) |
+| `hook:<event>` | Subscribe to the named panel event via `ctx.hooks.on(event, fn)` |
+| `core.metadata:server` | Read/write the extension's namespace in the `server.metadata` JSON column |
+| `core.metadata:node` | Same for `node.metadata` |
+| `core.metadata:user` | Same for `user.metadata` |
+| `settings` | Scoped key/value store via `ctx.settings` |
+
+<Callout type="warn">
+  Request only the permissions your extension actually uses. Users see the full permission list before installing and may decline extensions that request more than they need.
+</Callout>
+
+## UI pages
+
+Each entry in `ui.pages` registers an iframe page in the panel:
+
+```json
+{
+  "ui": {
+    "pages": [
+      {
+        "route": "/my-ext",
+        "section": "panel",
+        "label": "My Extension",
+        "icon": "Blocks"
+      }
+    ]
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `route` | `string` | URL path (must start with `/`). The extension's `dist/web/` is served at this path. |
+| `section` | `"panel"` \| `"admin"` | Which sidebar the entry appears in. `"panel"` is the user-facing sidebar; `"admin"` is the admin section. |
+| `label` | `string` | Sidebar label text. |
+| `icon` | `string` | Lucide icon name (e.g. `"Blocks"`, `"Server"`, `"Wrench"`). |
+
+The build tool (`struxa-ext build`) infers the entry point from each page's route: it looks for `src/main.{tsx,ts,js}` and bundles it to `dist/web/bundle.js`, with `dist/web/index.html` as the HTML shell.
+
+## Widget slots
+
+Each entry in `ui.slots` injects a widget component into a named panel slot:
+
+```json
+{
+  "ui": {
+    "slots": [
+      { "slot": "server.overview.after", "widget": "/my-ext/widget" }
+    ]
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `slot` | `string` | Named injection point in the panel UI. |
+| `widget` | `string` | Route to the widget's `dist/web/<widget>/` directory. |
+
+Available slots:
+
+| Slot | Location |
+|---|---|
+| `server.overview.after` | Below the server overview card on the server detail page |
+
+The widget is served from a separate `dist/web/widget/` directory built from `src/widget.{tsx,ts,js}`.
+
+## Example
+
+```json
+{
+  "id": "my-ext",
+  "name": "My Extension",
+  "version": "1.0.0",
+  "description": "Does something useful.",
+  "author": "acme",
+  "struxaApi": "^1.0.0",
+  "permissions": [
+    "api:protected",
+    "hook:server.created",
+    "core.metadata:server",
+    "settings"
+  ],
+  "ui": {
+    "pages": [
+      { "route": "/my-ext", "section": "panel", "label": "My Extension", "icon": "Blocks" }
+    ],
+    "slots": [
+      { "slot": "server.overview.after", "widget": "/my-ext/widget" }
+    ]
+  }
+}
+```
