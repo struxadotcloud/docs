@@ -92,7 +92,7 @@ Subscribing to an event without the matching `hook:<event>` permission logs a wa
 
 ### `ctx.db` — requires `db:own`
 
-A Drizzle ORM client connected to the panel's MySQL instance. Your extension owns tables prefixed `ext_<id>_`. These tables must be created via migrations (see [Publishing](/docs/extensions/publishing#migrations)).
+A Drizzle ORM client connected to the panel's MySQL instance. Your extension owns tables prefixed `ext_<id>_`. These tables must be created via migrations (see [Publishing](/extensions/publishing#migrations)).
 
 ```js
 import { sql } from 'drizzle-orm';
