@@ -15,6 +15,8 @@ my-ext/
 │   ├── page.html        # HTML shell (optional — default is generated)
 │   ├── widget.tsx       # widget entry point → dist/web/widget/bundle.js
 │   └── widget.html      # widget HTML shell (optional)
+├── messages/
+│   └── en.json          # translated strings (optional)
 └── tsconfig.json        # for IDE type checking
 ```
 
@@ -63,7 +65,7 @@ export function App() {
 
 ## Reading bridge state with `useHostBridge`
 
-`useHostBridge` provides a React hook that subscribes to the bridge's reactive state (current user, current server context, theme, etc.):
+`useHostBridge` provides a React hook that subscribes to the bridge's reactive state (current user, current server context, theme, translated messages, etc.):
 
 ```tsx
 import { useHostBridge } from '@struxa/extension-sdk/react';
@@ -71,11 +73,60 @@ import { useHostBridge } from '@struxa/extension-sdk/react';
 export function App() {
   const bridge = useHostBridge();
 
-  return <p>Logged in as: {bridge?.user?.name ?? '...'}</p>;
+  return <p>Logged in as: {bridge?.context?.session.userId ?? '...'}</p>;
 }
 ```
 
 The bridge state is pushed from the host whenever the context changes (e.g. user navigates to a different server). The hook returns `null` until the first message arrives.
+
+## Translations
+
+If your extension declares a `messages` field in `manifest.json`, the host loads the translated strings and pushes them to the iframe on init. Use `bridge.t(key, params?)` to resolve a dot-notation key from those messages:
+
+```tsx
+import { createBridge } from '@struxa/extension-sdk/client';
+
+const bridge = createBridge({
+  onInit: () => {
+    // bridge.t is available immediately after init
+    console.log(bridge.t('nav.title'));               // → "My Extension"
+    console.log(bridge.t('msg.count', { n: 3 }));    // → "3 items"
+  },
+});
+```
+
+In React, read `bridge.context.messages` via the `useHostBridge` hook:
+
+```tsx
+import { useHostBridge } from '@struxa/extension-sdk/react';
+import { createBridge } from '@struxa/extension-sdk/client';
+
+// Create bridge once at module level
+const bridge = createBridge({ autoResize: true });
+
+export function App() {
+  useHostBridge(); // keeps context reactive
+
+  return <h1>{bridge.t('nav.title')}</h1>;
+}
+```
+
+**messages/en.json** example:
+
+```json
+{
+  "nav": {
+    "title": "My Extension"
+  },
+  "msg": {
+    "count": "{n} items"
+  }
+}
+```
+
+The host resolves keys using dot-notation. `{param}` placeholders are replaced by the second argument. Falls back to the key itself if no match is found.
+
+Host-rendered elements (nav labels, server settings rows, admin settings tab labels) are also resolved through the same messages namespace — no extra work needed.
 
 ## Widget slots
 
@@ -87,7 +138,7 @@ A widget is a smaller React component injected into a named slot on an existing 
 {
   "ui": {
     "slots": [
-      { "slot": "server.overview.after", "widget": "/my-ext/widget" }
+      { "slot": "server.stats.after", "widget": "/my-ext/widget" }
     ]
   }
 }
@@ -110,14 +161,24 @@ import { useHostBridge } from '@struxa/extension-sdk/react';
 export function Widget() {
   const bridge = useHostBridge();
   return (
-    <div style={{ padding: '12px', border: '1px solid #ccc', borderRadius: 8 }}>
-      Extension widget — server: {bridge?.server?.name ?? '…'}
+    <div style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: 8 }}>
+      Server ID: {bridge?.context?.params.serverId ?? '…'}
     </div>
   );
 }
 ```
 
-The widget is automatically built to `dist/web/widget/bundle.js` and served when the slot is rendered.
+### Available slots
+
+| Slot name | Location |
+|---|---|
+| `server.overview.after` | Below the full server overview on the console page |
+| `server.stats.after` | Bottom of the stats sidebar on the console page |
+| `server.settings.general.after` | After the General card on the server settings page |
+| `server.settings.sftp.after` | After the SFTP card on the server settings page |
+| `server.settings.sidebar.after` | Bottom of the sidebar on the server settings page |
+
+Every widget receives the current `serverId` in `bridge.context.params` when rendered inside a server page.
 
 ## Custom HTML shell
 
