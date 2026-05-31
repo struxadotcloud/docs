@@ -92,7 +92,7 @@ Each entry in `ui.pages` registers an iframe page in the panel:
 |---|---|---|
 | `route` | `string` | URL path (must start with `/`). The extension's `dist/web/` is served at this path. |
 | `section` | `"panel"` \| `"admin"` | Which sidebar the entry appears in. `"panel"` is the user-facing sidebar; `"admin"` is the admin section. |
-| `label` | `string` | Sidebar label. May be a literal string or an i18n key resolved under `ext.<id>.*`. |
+| `label` | `string` | Sidebar label. It may be a literal string or an i18n key resolved under `ext.<id>.*`. |
 | `icon` | `string` | Lucide icon name (e.g. `"Blocks"`, `"Server"`, `"Wrench"`). |
 
 ## Widget slots

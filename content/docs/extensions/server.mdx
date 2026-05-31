@@ -10,7 +10,7 @@ Every extension has a server entry at `server/index.js` (or `server/index.ts`). 
 ```js
 /**
  * @param {import('@struxa/extension-sdk/server').ExtensionContext} ctx
- * @returns {{ router: import('@orpc/server').AnyRouter }}
+ * @returns {{ router?: import('@orpc/server').AnyRouter }}
  */
 export async function register(ctx) {
   // … set up hooks, subscriptions, etc.
@@ -77,8 +77,8 @@ The router is mounted under `ext.<id>.*` in the panel's global oRPC tree. Client
 Subscribe to panel events. Subscriptions take effect as soon as `register` runs.
 
 ```js
-ctx.hooks.on('server.created', async ({ serverId }) => {
-  ctx.logger.info('new server', { serverId });
+ctx.hooks.on('server.created', async ({ serverId, userId }) => {
+  ctx.logger.info('new server', { serverId, userId });
 });
 ```
 

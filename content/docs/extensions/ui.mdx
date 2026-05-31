@@ -73,7 +73,7 @@ import { useHostBridge } from '@struxa/extension-sdk/react';
 export function App() {
   const bridge = useHostBridge();
 
-  return <p>Logged in as: {bridge?.context?.session.userId ?? '...'}</p>;
+  return <p>Logged in as: {bridge?.context?.session?.userId ?? '...'}</p>;
 }
 ```
 
@@ -99,14 +99,11 @@ In React, read `bridge.context.messages` via the `useHostBridge` hook:
 
 ```tsx
 import { useHostBridge } from '@struxa/extension-sdk/react';
-import { createBridge } from '@struxa/extension-sdk/client';
-
-// Create bridge once at module level
-const bridge = createBridge({ autoResize: true });
 
 export function App() {
-  useHostBridge(); // keeps context reactive
+  const bridge = useHostBridge();
 
+  if (!bridge) return null;
   return <h1>{bridge.t('nav.title')}</h1>;
 }
 ```
