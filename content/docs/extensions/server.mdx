@@ -10,7 +10,7 @@ Every extension has a server entry at `server/index.js` (or `server/index.ts`). 
 ```js
 /**
  * @param {import('@struxa/extension-sdk/server').ExtensionContext} ctx
- * @returns {{ router: import('@orpc/server').AnyRouter }}
+ * @returns {{ router?: import('@orpc/server').AnyRouter }}
  */
 export async function register(ctx) {
   // … set up hooks, subscriptions, etc.
@@ -20,8 +20,8 @@ export async function register(ctx) {
 ```
 
 - The function must be a named export (`export async function register`).
-- The return value must include a `router` property. Return an empty object `{}` for the router if you have no procedures.
-- The function runs once. Do not return a cleanup function — if you open connections, close them on process exit.
+- The return value must include a `router` property. Return an empty object `{}` if you have no procedures.
+- The function runs once per boot. Repopulate any in-memory state (field outputs, caches) here.
 
 ## Context API
 
@@ -77,18 +77,31 @@ The router is mounted under `ext.<id>.*` in the panel's global oRPC tree. Client
 Subscribe to panel events. Subscriptions take effect as soon as `register` runs.
 
 ```js
-ctx.hooks.on('server.created', async ({ server }) => {
-  ctx.logger.info('new server', { id: server.id });
+ctx.hooks.on('server.created', async ({ serverId, userId }) => {
+  ctx.logger.info('new server', { serverId, userId });
 });
 ```
 
-Available events:
+#### Hook events
 
-| Event | Payload |
-|---|---|
-| `server.created` | `{ server: { id, name, ... } }` |
+| Event | Payload | Permission |
+|---|---|---|
+| `server.created` | `{ serverId, userId }` | `hook:server.created` |
+| `server.updated` | `{ serverId, userId }` | `hook:server.updated` |
+| `server.deleted` | `{ serverId, userId }` | `hook:server.deleted` |
+| `server.power` | `{ serverId, action }` | `hook:server.power` |
+| `server.settings.saved` | `{ serverId, key, value }` | `hook:server.settings.saved` |
+| `admin.settings.saved` | `{ tabId, changes }` | `hook:admin.settings.saved` |
+| `node.created` | `{ nodeId }` | `hook:node.created` |
+| `node.updated` | `{ nodeId }` | `hook:node.updated` |
+| `node.deleted` | `{ nodeId }` | `hook:node.deleted` |
+| `user.created` | `{ userId }` | `hook:user.created` |
+| `user.updated` | `{ userId }` | `hook:user.updated` |
+| `user.deleted` | `{ userId }` | `hook:user.deleted` |
 
-Subscribing to an event without the matching `hook:<event>` permission logs a warning and does nothing.
+`server.settings.saved` fires once per field save with the key and new value. `admin.settings.saved` fires once per tab save with all changed keys in `changes`. Both events are delivered only to the extension that owns those settings — other extensions do not receive them.
+
+Subscribing without the matching permission logs a warning and does nothing.
 
 ### `ctx.db` — requires `db:own`
 
@@ -124,9 +137,9 @@ await ctx.coreMeta.server.set(serverId, { lastSeen: Date.now() });
 
 Available entities: `server`, `node`, `user` — each requires its own `core.metadata:<entity>` permission.
 
-### `ctx.settings` — requires `settings`
+### `ctx.settings` — requires `settings:<prefix>`
 
-A simple key/value store scoped to `ext:<id>:*`. Values are strings.
+A simple key/value store scoped to `ext:<id>:*`. Values are strings. This is the backing store for `ui.adminSettingsTabs` — keys declared there are readable here at runtime.
 
 ```js
 // Write a setting
@@ -137,32 +150,88 @@ const url = await ctx.settings.get('webhook_url');
 
 // Read all settings as a plain object (keys are un-namespaced)
 const all = await ctx.settings.all();
-// { webhook_url: 'https://...' }
+// { webhook_url: 'https://...', api_token: '...', ... }
 ```
+
+### `ctx.fieldOutputs` — requires `output:<entity>:<field>`
+
+Publish a computed value that the host panel displays instead of the default for a named UI field. Values are held in memory — repopulate them on each boot by reading from `ctx.settings` or `ctx.coreMeta`.
+
+```js
+export default defineExtension({
+  async register(ctx) {
+    // Restore outputs on boot
+    const allServers = await ctx.db.execute(sql`SELECT id, subdomain FROM ext_my_ext_domains`);
+    for (const row of allServers) {
+      ctx.fieldOutputs.set("server", "address", row.id, `${row.subdomain}:25565`);
+    }
+
+    // Keep outputs current as servers are created
+    ctx.hooks.on("server.created", async ({ serverId }) => {
+      const subdomain = await provisionSubdomain(serverId);
+      await ctx.coreMeta.server.set(serverId, { subdomain });
+      ctx.fieldOutputs.set("server", "address", serverId, `${subdomain}:25565`);
+      ctx.fieldOutputs.set("server", "sftp.host", serverId, subdomain);
+    });
+
+    ctx.hooks.on("server.deleted", async ({ serverId }) => {
+      ctx.fieldOutputs.clear("server", "address", serverId);
+      ctx.fieldOutputs.clear("server", "sftp.host", serverId);
+    });
+
+    return {};
+  },
+});
+```
+
+Calling `set` or `clear` without the matching `output:<entity>:<field>` permission logs a warning and does nothing.
+
+Currently overridable fields:
+
+| Entity | Field | Where it appears |
+|---|---|---|
+| `server` | `address` | Address stat on the server console page |
+| `server` | `sftp.host` | SFTP section and sidebar on the server settings page |
 
 ## Full example
 
 ```js
 import { z } from 'zod';
+import { defineExtension } from '@struxa/extension-sdk/server';
 
-export async function register(ctx) {
-  // Subscribe to server creation events
-  ctx.hooks.on('server.created', async ({ server }) => {
-    await ctx.coreMeta.server.set(server.id, { registeredAt: Date.now() });
-    ctx.logger.info('tracked new server', { id: server.id });
-  });
+export default defineExtension({
+  async register(ctx) {
+    // React to admin saving the extension's settings tab
+    ctx.hooks.on('admin.settings.saved', async ({ tabId, changes }) => {
+      ctx.logger.info('admin settings updated', { tabId, changes });
+    });
 
-  const { protectedProcedure } = ctx.procedures;
+    // React to a user saving a per-server setting
+    ctx.hooks.on('server.settings.saved', async ({ serverId, key, value }) => {
+      if (key === 'enabled' && value === '1') {
+        const subdomain = await provisionSubdomain(serverId);
+        ctx.fieldOutputs.set('server', 'address', serverId, `${subdomain}:25565`);
+        await ctx.coreMeta.server.set(serverId, { subdomain });
+      }
+    });
 
-  const router = {
-    getInfo: protectedProcedure
-      .input(z.object({ serverId: z.string() }))
-      .handler(async ({ input }) => {
-        const meta = await ctx.coreMeta.server.get(input.serverId);
-        return { meta };
-      }),
-  };
+    ctx.hooks.on('server.created', async ({ serverId }) => {
+      await ctx.coreMeta.server.set(serverId, { registeredAt: Date.now() });
+      ctx.logger.info('tracked new server', { id: serverId });
+    });
 
-  return { router };
-}
+    const { protectedProcedure } = ctx.procedures;
+
+    const router = {
+      getInfo: protectedProcedure
+        .input(z.object({ serverId: z.string() }))
+        .handler(async ({ input }) => {
+          const meta = await ctx.coreMeta.server.get(input.serverId);
+          return { meta };
+        }),
+    };
+
+    return { router };
+  },
+});
 ```
