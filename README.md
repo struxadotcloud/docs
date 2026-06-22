@@ -54,5 +54,5 @@ Content lives in `content/docs/` as MDX files. To add or update a page, edit the
 <br />
 
 <div align="center">
-  <sub>Copyright (c) The Hosting Company Ltd</sub>
+  <sub>Copyright (c) Disaster Limited</sub>
 </div>
