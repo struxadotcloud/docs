@@ -1,5 +1,0 @@
-{
-  "title": "Extensions",
-  "root": true,
-  "pages": ["index", "quickstart", "manifest", "server", "ui", "publishing"]
-}

@@ -1,0 +1,63 @@
+---
+title: Subscriptions
+description: How subscriptions work — the purchase flow, lifecycle, statuses, and admin management.
+---
+
+A subscription ties a user to a pricing tier for a fixed period. When a subscription is created, a game server is provisioned automatically with the plan's resource limits. When it expires or is canceled, the server is suspended.
+
+## Purchase flow
+
+The purchase wizard on `/billing/[slug]` walks the user through four steps:
+
+1. **Select duration** — choose from the available pricing tiers (7-day, 1-month, etc.) and see the price
+2. **Pick server type** — select an egg (server software template); only eggs allowed by the plan are shown
+3. **Configure** — choose a Docker image variant and fill in required startup variables
+4. **Confirm** — enter a server name; the panel checks wallet balance and node capacity, then completes the purchase
+
+On confirmation the panel atomically:
+- Debits the wallet
+- Creates the subscription record
+- Creates the server with the plan's resource limits
+- Generates an invoice
+- Records a `charge` transaction in the wallet history
+- Awards referral bonuses if the user used a referral code on their first top-up
+
+If any step fails the entire operation is rolled back and the wallet is not charged.
+
+## Statuses
+
+| Status | Meaning |
+|---|---|
+| `active` | Subscription is current; server is running |
+| `trialing` | In a trial period; server is running |
+| `past_due` | Renewal payment failed; server may be suspended |
+| `canceled` | Subscription ended; set either immediately or at period end |
+| `unpaid` | Multiple renewal failures; server is suspended |
+| `paused` | Manually paused by an admin |
+
+## Lifecycle
+
+- **Renewal** — handled automatically at period end if auto-renewal is configured
+- **Cancel at period end** — user or admin marks the subscription to cancel; it stays active until the end date
+- **Immediate cancel** — admin can terminate a subscription right away
+- **Period extension** — admin can push the end date forward
+- **Pause/unpause** — admin only; suspends the server without canceling
+
+## Capacity checking
+
+Before a purchase completes, the panel performs a soft capacity check:
+
+- It looks at all nodes that are eligible for the plan (considering node restrictions)
+- It checks current allocated CPU, RAM, and disk against node capacity plus any configured overallocation headroom
+- If no node has enough headroom, the purchase fails with `NO_CAPACITY`
+
+Overallocation headroom is configured per-node in the node settings.
+
+## Admin management
+
+From **Admin → Billing → Subscriptions** you can:
+
+- View all subscriptions filtered by status, user, or product
+- Cancel or pause a subscription
+- Extend the subscription period
+- See the linked server and invoice

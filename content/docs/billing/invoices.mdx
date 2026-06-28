@@ -1,0 +1,70 @@
+---
+title: Invoices & Coupons
+description: How invoices are generated, VAT handling, and how to create and use discount coupons.
+---
+
+## Invoices
+
+An invoice is created automatically for every subscription purchase and renewal. Invoices are read-only from the user's perspective; admins can view and manage them in **Admin → Billing → Invoices**.
+
+### Numbering
+
+Invoice numbers are generated sequentially with a configurable prefix. Set the prefix in **Admin → Settings → Billing** via the `billing_invoice_prefix` setting (e.g. `INV-` produces `INV-0001`, `INV-0002`, …).
+
+### Line items
+
+Each invoice contains one or more line items with:
+
+| Field | Description |
+|---|---|
+| Description | Human-readable label (e.g. "Minecraft Basic — 1 month") |
+| Quantity | Number of units (typically 1) |
+| Period start | Subscription start date |
+| Period end | Subscription end date |
+| Unit price | Price before tax and discounts |
+| Subtotal | `quantity × unit price` |
+| Discount | Coupon discount applied, if any |
+| Tax | VAT amount |
+| Total | Final amount charged |
+
+### Statuses
+
+| Status | Meaning |
+|---|---|
+| `draft` | Created but not yet finalized |
+| `open` | Awaiting payment |
+| `paid` | Payment confirmed |
+| `uncollectible` | Marked as unrecoverable |
+| `void` | Canceled before payment |
+
+### VAT
+
+If your platform collects VAT, you can store the tax rate and the customer's VAT number per invoice. These fields are populated from the user's billing profile. The billing address (street, city, country, postal code) is also stored on the invoice for compliance purposes.
+
+---
+
+## Coupons
+
+Coupons let you offer discounts on subscription purchases. Manage them in **Admin → Billing → Coupons**.
+
+### Creating a coupon
+
+| Field | Description |
+|---|---|
+| Code | Uppercase alphanumeric code users enter at checkout |
+| Type | `percentage` (e.g. 20% off) or `fixed` (e.g. $5 off) |
+| Value | The discount amount |
+| Max redemptions | Maximum total uses across all users. Leave blank for unlimited. |
+| Redeem by | Optional expiry date after which the code is rejected |
+| Applies to | Restrict to specific plans, or leave blank to apply globally |
+
+### Using a coupon
+
+During the purchase wizard's confirmation step, users enter a coupon code. The panel:
+
+1. Validates the code (not expired, not over the redemption limit, applies to the selected plan)
+2. Calculates the discounted price
+3. Applies the discount to the invoice line item
+4. Increments the coupon's redemption count
+
+Each coupon tracks how many times it has been redeemed and by which users, so per-user limits can also be enforced if needed.

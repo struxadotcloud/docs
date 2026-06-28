@@ -1,0 +1,71 @@
+---
+title: Plans & Products
+description: How to structure your billing catalog with categories, products, pricing tiers, and resource limits.
+---
+
+The billing catalog is a three-level hierarchy: **categories** contain **products**, and products contain **pricing tiers**. Everything is managed in **Admin → Billing → Catalog**.
+
+## Categories
+
+A category is the top-level grouping visible on the `/billing` page.
+
+| Field | Description |
+|---|---|
+| Name | Display name shown in the category grid |
+| Description | Short text shown below the name |
+| Icon | Optional image shown in the category card |
+| Banner | Optional wide image shown at the top of the category detail page |
+
+Category detail pages are served at `/billing/[slug]` where the slug is derived from the category name.
+
+## Products
+
+Products live inside a category and represent a distinct hosting tier or offering.
+
+| Field | Description |
+|---|---|
+| Name | Display name shown in the product list |
+| Description | Optional detail text |
+| Featured | Highlighted visually in the product grid |
+| Metadata | Arbitrary key/value pairs for internal tracking |
+
+## Pricing tiers
+
+Each product can have multiple pricing tiers — one per billing duration. Users pick a duration during the purchase wizard.
+
+| Duration | Period |
+|---|---|
+| `7d` | 7 days |
+| `1m` | 1 month |
+| `3m` | 3 months |
+| `6m` | 6 months |
+| `1y` | 1 year |
+
+The price is stored in the instance's default currency (set in **Admin → Settings → Billing**).
+
+## Resource limits
+
+Every pricing tier defines a set of resource limits that are applied to the server created on purchase.
+
+| Limit | Unit | Description |
+|---|---|---|
+| CPU | cores | Number of CPU cores allocated to the server |
+| RAM | GB | Memory limit |
+| Disk | GB | Disk space limit |
+| Backups | count | Maximum number of backups the user can create |
+| Allocations | count | Number of port allocations |
+| Databases | count | Number of databases |
+| Allowed eggs | egg IDs | If set, restricts which server types the user can select |
+| Node restrictions | node IDs | If set, limits which nodes the server may be placed on |
+
+Capacity is checked at purchase time using a soft check — nodes can be configured to allow overallocation up to a headroom percentage.
+
+## Uploading images
+
+Category icons and banner images are uploaded via the panel's file API. When using the admin UI, the upload is handled for you. If you're managing the catalog via API, send a `multipart/form-data` POST to:
+
+```
+POST /api/files/upload/billing-image
+```
+
+The response returns the file URL to store in the category record.

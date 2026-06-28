@@ -10,7 +10,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       tabMode="navbar"
       tabs={[
         { title: 'Docs', url: '/' },
-        { title: 'Extensions', url: '/extensions' },
+        { title: 'Billing', url: '/billing' },
       ]}
     >
       {children}

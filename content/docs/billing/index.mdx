@@ -1,0 +1,38 @@
+---
+title: Billing
+description: Struxa's built-in billing module handles subscriptions, wallet top-ups, invoicing, coupons, and referrals without any external billing platform required.
+---
+
+Struxa includes a built-in billing module that lets you sell game server hosting plans directly from your panel. Users browse a product catalog, purchase a plan with their wallet balance, and get a server provisioned automatically. Admins manage everything from **Admin → Billing**.
+
+## What billing provides
+
+| Feature | Description |
+|---|---|
+| **Product catalog** | Categories and products with pricing tiers, displayed at `/billing` |
+| **Subscriptions** | Time-limited plans tied to a running server — active, trialing, past_due, canceled, unpaid, paused |
+| **Wallet** | Pre-loaded credit balance; users top up via a payment provider and spend on plans |
+| **Payment providers** | Stripe and SimPay supported; webhooks credit the wallet on payment confirmation |
+| **Invoicing** | Auto-generated invoices with line items, VAT, configurable prefix, and billing address |
+| **Coupons** | Percentage or fixed discounts with redemption limits and expiry |
+| **Referrals** | User-generated referral codes that award a discount to the referee and a bonus to the referrer |
+
+## Where billing lives in the panel
+
+| URL | Audience | Purpose |
+|---|---|---|
+| `/billing` | Users | Browse categories, view products, start a purchase |
+| `/billing/[slug]` | Users | 4-step purchase wizard for a category |
+| `/billing/wallet` | Users | Top up balance, view transaction history, manage referral code |
+| `/admin/billing` | Admins | Configure providers, manage catalog, view subscriptions |
+| `/admin/settings` → Billing tab | Admins | Enable/disable billing, set default currency, invoice prefix |
+
+## Enabling billing
+
+Billing is off by default. To turn it on, go to **Admin → Settings** and enable the **Billing** toggle. You can also set the default currency and invoice number prefix from that tab.
+
+The `billing_enabled` setting acts as a global kill switch — disabling it hides all billing UI from users without affecting existing subscription data.
+
+## Getting started
+
+Head to [Quickstart](/billing/quickstart) to configure a payment provider, build your first product catalog, and run a test purchase end-to-end.
