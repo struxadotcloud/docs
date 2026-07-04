@@ -15,12 +15,11 @@ The purchase wizard on `/billing/[slug]` walks the user through four steps:
 4. **Confirm** — enter a server name; the panel checks wallet balance and node capacity, then completes the purchase
 
 On confirmation the panel atomically:
-- Debits the wallet (skipped if the final price is 0, e.g. a 100%-off coupon)
+- Debits the wallet
 - Creates the subscription record with status `active`
 - Creates the server with the plan's CPU/RAM/disk limits
-- Generates an invoice, already marked `paid`
+- Stores an invoice record for the purchase (there's no invoice view or download for users yet — it's kept in the database only)
 - Records a `charge` transaction in the wallet history
-- Redeems the coupon, if one was applied
 
 If any step fails the entire operation is rolled back and the wallet is not charged. Referral bonuses are not part of the purchase flow — they're awarded on wallet top-up (see [Wallet & Payments](/billing/wallet)).
 

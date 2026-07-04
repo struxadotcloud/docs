@@ -10,7 +10,7 @@ This guide walks you through getting billing fully operational on a fresh Struxa
 Navigate to **Admin → Billing** and open the **Settings** tab. Toggle **Enable Billing** on and set:
 
 - **Default currency** — ISO 4217 code (e.g. `USD`, `EUR`, `PLN`). All prices are stored in this currency.
-- **Invoice prefix** — a short string prepended to invoice numbers (e.g. `INV-`). Optional. Note that invoice numbers are not sequential — see [Invoices & Coupons](/billing/invoices) for the actual format.
+- **Invoice prefix** — a short string prepended to invoice numbers (e.g. `INV-`). Optional. An invoice record is stored in the database for every purchase and renewal, but there's no invoice view or download for users yet.
 
 Save the settings. The `/billing` route and the wallet are now visible to users.
 

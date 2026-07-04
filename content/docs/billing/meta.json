@@ -1,5 +1,5 @@
 {
   "title": "Billing",
   "root": true,
-  "pages": ["index", "quickstart", "plans", "subscriptions", "wallet", "invoices"]
+  "pages": ["index", "quickstart", "plans", "subscriptions", "wallet"]
 }
