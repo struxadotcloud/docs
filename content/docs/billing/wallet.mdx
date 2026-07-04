@@ -17,7 +17,7 @@ Users navigate to `/billing/wallet` and click **Top Up**. The flow:
 6. The webhook handler validates the payload, credits the wallet, and records a `topup` transaction
 
 <Callout type="info">
-  Admins can credit or debit a wallet directly from **Admin → Billing → Users** without going through a payment provider. These show up as `adjustment` transactions.
+  Admins can credit or debit a wallet directly from a user's page at **Admin → Users → [user]** without going through a payment provider. These show up as `adjustment` transactions. Referral bonuses and commissions are also recorded with type `adjustment`.
 </Callout>
 
 ## Transaction types
@@ -26,34 +26,32 @@ Users navigate to `/billing/wallet` and click **Top Up**. The flow:
 |---|---|
 | `topup` | Wallet funded via a payment provider |
 | `charge` | A subscription purchase or renewal debits the wallet |
-| `refund` | A subscription is refunded to the wallet |
-| `adjustment` | Manual admin credit or debit |
-| `expired` | Balance expired (if expiry is configured) |
+| `adjustment` | Manual admin credit/debit, and referral bonuses/commissions |
+| `refund` | Reserved in the schema; nothing in the current code creates a `refund` transaction |
+| `expired` | Reserved in the schema; there is no balance-expiry feature |
 
-The full transaction history is visible to users at `/billing/wallet` and to admins in **Admin → Billing → Users**.
+The full transaction history is visible to users at `/billing/wallet` and to admins on the user's page at **Admin → Users → [user]**.
 
 ## Auto top-up
 
-Users can configure their wallet to refill automatically when the balance drops below a threshold:
-
-- **Threshold** — when the balance falls below this amount, a top-up is triggered automatically
-- **Amount** — how much to add per auto top-up
-
-Auto top-up uses the user's saved payment method with the configured provider.
+<Callout type="warn">
+  The wallet has `autoTopUpEnabled`/threshold/amount columns in the database, but there is currently no setting to configure them and no code that triggers an automatic top-up. This feature does not work yet — treat any mention of it elsewhere as aspirational.
+</Callout>
 
 ## Referral program
 
-The referral program is enabled via the `billing_referral_enabled` setting in **Admin → Settings → Billing**.
+The referral program is enabled via the `billing_referral_enabled` setting in **Admin → Billing → Settings**.
 
-Users generate a personal referral code in **Wallet → Referrals** (3–30 characters, alphanumeric plus `-` and `_`). When a new user applies the code on their first wallet top-up:
+Users generate a personal referral code in **Wallet → Referrals** (3–30 characters, alphanumeric plus `-` and `_`). When a new user applies the code and then completes their first wallet top-up:
 
-- The **referee** gets a discount applied to that top-up (configurable percentage)
-- The **referrer** gets a bonus credited to their wallet (configurable percentage of the referee's top-up)
+- The **referee** gets an extra bonus credited to their wallet, on top of the amount they topped up (configurable percentage of the top-up amount) — it is a bonus credit, not a discount on the price they pay
+- The **referrer** gets a commission credited to their wallet (configurable percentage of the referee's top-up)
 
 Rules:
-- The code is applied during the top-up flow, not at purchase
+- The code is applied any time before the first top-up (via `applyReferralCode`), but the bonus and commission are only credited when that first top-up webhook is processed
 - Bonuses are awarded only on the referee's first top-up
 - A user cannot use their own referral code (self-referral is blocked)
+- A user can only ever apply one referral code, ever (attempting a second one fails)
 - Each code tracks its total usage count
 
-Configure the discount and bonus percentages in **Admin → Settings → Billing → Referrals**.
+Configure the bonus and commission percentages in **Admin → Billing → Settings → Referrals**.

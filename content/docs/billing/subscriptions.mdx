@@ -15,49 +15,49 @@ The purchase wizard on `/billing/[slug]` walks the user through four steps:
 4. **Confirm** — enter a server name; the panel checks wallet balance and node capacity, then completes the purchase
 
 On confirmation the panel atomically:
-- Debits the wallet
-- Creates the subscription record
-- Creates the server with the plan's resource limits
-- Generates an invoice
+- Debits the wallet (skipped if the final price is 0, e.g. a 100%-off coupon)
+- Creates the subscription record with status `active`
+- Creates the server with the plan's CPU/RAM/disk limits
+- Generates an invoice, already marked `paid`
 - Records a `charge` transaction in the wallet history
-- Awards referral bonuses if the user used a referral code on their first top-up
+- Redeems the coupon, if one was applied
 
-If any step fails the entire operation is rolled back and the wallet is not charged.
+If any step fails the entire operation is rolled back and the wallet is not charged. Referral bonuses are not part of the purchase flow — they're awarded on wallet top-up (see [Wallet & Payments](/billing/wallet)).
 
 ## Statuses
 
-| Status | Meaning |
-|---|---|
-| `active` | Subscription is current; server is running |
-| `trialing` | In a trial period; server is running |
-| `past_due` | Renewal payment failed; server may be suspended |
-| `canceled` | Subscription ended; set either immediately or at period end |
-| `unpaid` | Multiple renewal failures; server is suspended |
-| `paused` | Manually paused by an admin |
+The subscription status column supports six values, but only three are ever set by the current code:
+
+| Status | Meaning | Set by |
+|---|---|---|
+| `active` | Subscription is current; server is running | Purchase, and renewal when the wallet has enough balance |
+| `past_due` | A renewal charge failed; servers on the subscription are suspended | The renewal worker, when the wallet balance is too low |
+| `canceled` | Subscription ended | Not currently set anywhere — see note below |
+| `trialing` | Reserved for a trial period | Not currently used; there is no purchase path that grants a trial, even though trial settings exist |
+| `unpaid` | Reserved for repeated renewal failures | Not currently used |
+| `paused` | Reserved for an admin-initiated pause | Not currently used |
 
 ## Lifecycle
 
-- **Renewal** — handled automatically at period end if auto-renewal is configured
-- **Cancel at period end** — user or admin marks the subscription to cancel; it stays active until the end date
-- **Immediate cancel** — admin can terminate a subscription right away
-- **Period extension** — admin can push the end date forward
-- **Pause/unpause** — admin only; suspends the server without canceling
+- **Renewal** — a background worker polls every 60 seconds for subscriptions whose period has ended. It always attempts to renew (there is no auto-renewal toggle to opt out): if the wallet has enough balance it debits it, extends `current_period_end`, and generates a renewal invoice; if not, it sets the subscription to `past_due` and suspends (kills and marks suspended) every server on it.
+- **Cancel** — a user can mark their own subscription with `cancelAtPeriodEnd: true`. This flag is only used for display today; the renewal worker does not check it, so a "canceled" subscription is still renewed and charged at period end like any other active one. There is no immediate-cancel action.
+- **Extension** — a user can manually extend their own subscription by purchasing an additional pricing tier period; this charges the wallet immediately and pushes `current_period_end` forward. There is no separate admin-initiated extension.
+- **Pause/unpause** — not implemented; there is no code path that sets a subscription to `paused`.
+
+<Callout type="warn">
+  Because the renewal worker ignores `cancelAtPeriodEnd`, subscriptions a user has "canceled" keep renewing (and charging the wallet) until the user cancels again after every period, or an admin intervenes directly. Treat this as a known code gap, not intended behavior.
+</Callout>
 
 ## Capacity checking
 
 Before a purchase completes, the panel performs a soft capacity check:
 
 - It looks at all nodes that are eligible for the plan (considering node restrictions)
-- It checks current allocated CPU, RAM, and disk against node capacity plus any configured overallocation headroom
-- If no node has enough headroom, the purchase fails with `NO_CAPACITY`
+- It checks current allocated RAM and disk (not CPU) against node capacity plus any configured overallocation headroom
+- If no node has enough headroom, the purchase fails with `NO_CAPACITY`; if there are no free allocations at all, it fails with `NO_ALLOCATIONS`
 
 Overallocation headroom is configured per-node in the node settings.
 
-## Admin management
+## Admin visibility
 
-From **Admin → Billing → Subscriptions** you can:
-
-- View all subscriptions filtered by status, user, or product
-- Cancel or pause a subscription
-- Extend the subscription period
-- See the linked server and invoice
+From a user's detail page at **Admin → Users → [user]** you can see that user's wallet balance, subscriptions, and wallet transaction history, and adjust their wallet balance. There is currently no admin UI to cancel, pause, or extend a subscription directly, and no cross-user subscription list filterable by status or product.

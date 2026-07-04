@@ -7,10 +7,10 @@ This guide walks you through getting billing fully operational on a fresh Struxa
 
 ## 1. Enable billing
 
-Navigate to **Admin → Settings** and open the **Billing** tab. Toggle **Enable Billing** on and set:
+Navigate to **Admin → Billing** and open the **Settings** tab. Toggle **Enable Billing** on and set:
 
 - **Default currency** — ISO 4217 code (e.g. `USD`, `EUR`, `PLN`). All prices are stored in this currency.
-- **Invoice prefix** — a short string prepended to invoice numbers (e.g. `INV-`). Optional.
+- **Invoice prefix** — a short string prepended to invoice numbers (e.g. `INV-`). Optional. Note that invoice numbers are not sequential — see [Invoices & Coupons](/billing/invoices) for the actual format.
 
 Save the settings. The `/billing` route and the wallet are now visible to users.
 
@@ -52,10 +52,9 @@ Save the provider. Users now see it as a top-up option in their wallet.
 Categories group related hosting plans. Navigate to **Admin → Billing → Catalog**.
 
 1. Click **New Category** — give it a name, optional icon, banner image, and description.
-2. Inside the category, click **New Product** — give it a name and mark it featured if you want it highlighted.
-3. Inside the product, click **New Pricing Tier** — choose a duration, set a price, and configure resource limits (CPU, RAM, disk, etc.).
+2. Inside the category, click **New Product** — give it a name, mark it featured if you want it highlighted, set its resource limits (CPU, RAM, disk, etc. — these apply to every duration of this product), and add one or more pricing tiers with a duration and price each.
 
-Repeat step 3 to add additional duration options for the same product (7-day, 1-month, 3-month, 6-month, 1-year).
+Add more pricing tiers (7-day, 1-month, 3-month, 6-month, 1-year) to offer several billing periods for the same product — they'll all provision the same resource limits.
 
 See [Plans & Products](/billing/plans) for a full reference on resource limits and how categories are displayed.
 
@@ -68,9 +67,9 @@ See [Plans & Products](/billing/plans) for a full reference on resource limits a
 5. On completion, a server is created and appears in your server list with the plan's resource limits applied.
 
 <Callout type="info">
-  For local testing, you can manually adjust a user's wallet balance from **Admin → Billing → Users** without going through a payment provider.
+  For local testing, you can manually adjust a user's wallet balance from **Admin → Users → [user]** without going through a payment provider.
 </Callout>
 
 ## 5. Verify the subscription
 
-Navigate to **Admin → Billing → Subscriptions** and confirm the new subscription shows status `active` with the correct start and end dates, linked to the right server and user.
+Navigate to that user's page at **Admin → Users → [user]** and confirm the new subscription shows status `active` with the correct start and end dates, linked to the right server. There is no cross-user subscription list yet — subscriptions are only visible per-user.

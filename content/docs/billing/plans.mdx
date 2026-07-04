@@ -5,6 +5,8 @@ description: How to structure your billing catalog with categories, products, pr
 
 The billing catalog is a three-level hierarchy: **categories** contain **products**, and products contain **pricing tiers**. Everything is managed in **Admin → Billing → Catalog**.
 
+Internally, each product has a single underlying plan record that holds its resource limits, and that plan owns the pricing tiers — but the admin UI only exposes categories, products, and pricing tiers, so this is transparent in day-to-day use.
+
 ## Categories
 
 A category is the top-level grouping visible on the `/billing` page.
@@ -26,8 +28,7 @@ Products live inside a category and represent a distinct hosting tier or offerin
 |---|---|
 | Name | Display name shown in the product list |
 | Description | Optional detail text |
-| Featured | Highlighted visually in the product grid |
-| Metadata | Arbitrary key/value pairs for internal tracking |
+| Featured | Highlighted visually in the product grid (only one featured product per category) |
 
 ## Pricing tiers
 
@@ -35,30 +36,30 @@ Each product can have multiple pricing tiers — one per billing duration. Users
 
 | Duration | Period |
 |---|---|
-| `7d` | 7 days |
-| `1m` | 1 month |
-| `3m` | 3 months |
-| `6m` | 6 months |
-| `1y` | 1 year |
+| `7day` | 7 days |
+| `1month` | 1 month |
+| `3months` | 3 months |
+| `6months` | 6 months |
+| `1year` | 1 year |
 
-The price is stored in the instance's default currency (set in **Admin → Settings → Billing**).
+The price is stored in the instance's default currency (set in **Admin → Billing → Settings**).
 
 ## Resource limits
 
-Every pricing tier defines a set of resource limits that are applied to the server created on purchase.
+Resource limits are defined once per product, not per pricing tier — every duration of a product provisions the same CPU, RAM, disk, and other limits; only the price and billing period change between tiers.
 
 | Limit | Unit | Description |
 |---|---|---|
-| CPU | cores | Number of CPU cores allocated to the server |
-| RAM | GB | Memory limit |
-| Disk | GB | Disk space limit |
-| Backups | count | Maximum number of backups the user can create |
-| Allocations | count | Number of port allocations |
-| Databases | count | Number of databases |
+| CPU | cores | Applied to the server on purchase |
+| RAM | GB | Applied to the server on purchase |
+| Disk | GB | Applied to the server on purchase |
+| Backups | count | Stored on the plan, but not currently enforced — the server gets no backup limit |
+| Allocations | count | Stored on the plan and used for the sold-out/capacity check, but the server is only ever given the single allocation picked during purchase |
+| Databases | count | Stored on the plan, but not currently enforced — the server gets no database limit |
 | Allowed eggs | egg IDs | If set, restricts which server types the user can select |
 | Node restrictions | node IDs | If set, limits which nodes the server may be placed on |
 
-Capacity is checked at purchase time using a soft check — nodes can be configured to allow overallocation up to a headroom percentage.
+Capacity is checked at purchase time using a soft check against RAM and disk (not CPU) — nodes can be configured to allow overallocation up to a headroom percentage.
 
 ## Uploading images
 
