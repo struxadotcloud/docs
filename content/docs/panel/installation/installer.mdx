@@ -33,9 +33,28 @@ bash <(curl -fsSL https://install.struxa.cloud)
 |---|---|
 | *(none)* | Interactive install of the latest stable release |
 | `--nightly` | Install the latest pre-release build |
+| `--no-telemetry` | Disable anonymous install telemetry (see [Telemetry](#telemetry)) |
 | `update` | Update an existing installation to the latest release |
 
 Install with Wings in the same run by selecting **Dashboard + Wings** when prompted — see [Wings - Installer](/wings/installation/installer) for what that step covers.
+
+## Telemetry
+
+The installer sends a few anonymous events (OS, architecture, install mode, and success/failure) so we can see install volume and where installs commonly fail. No domains, secrets, or IP addresses are collected.
+
+To opt out, use any of:
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud) --no-telemetry
+```
+
+```bash
+STRUXA_NO_TELEMETRY=1 bash <(curl -fsSL https://install.struxa.cloud)
+```
+
+```bash
+DO_NOT_TRACK=1 bash <(curl -fsSL https://install.struxa.cloud)
+```
 
 ## Updating
 
