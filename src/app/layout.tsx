@@ -1,4 +1,4 @@
-import { Cal_Sans, Geist, Geist_Mono } from 'next/font/google';
+import { Funnel_Display, Geist, Geist_Mono } from 'next/font/google';
 import { Provider } from '@/components/provider';
 import type { Metadata } from 'next';
 import './global.css';
@@ -8,10 +8,10 @@ const geistSans = Geist({
   subsets: ['latin'],
 });
 
-const calSans = Cal_Sans({
-  variable: '--font-cal-sans',
+const funnelDisplay = Funnel_Display({
+  variable: '--font-funnel-display',
   subsets: ['latin'],
-  weight: '400',
+  weight: ['400', '600', '700'],
   fallback: [],
 });
 
@@ -35,7 +35,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${calSans.variable} ${geistSans.variable} ${geistMono.variable}`}
+      className={`${funnelDisplay.variable} ${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="flex flex-col min-h-screen antialiased">
         <Provider>{children}</Provider>
