@@ -7,6 +7,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
     <DocsLayout
       tree={source.getPageTree()}
       {...baseOptions()}
+      sidebar={{ collapsible: false }}
       tabMode="navbar"
       tabs={[
         { title: 'Docs', url: '/' },

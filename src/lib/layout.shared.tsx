@@ -13,6 +13,7 @@ export function baseOptions(): BaseLayoutProps {
             width={18}
             height={18}
             className="hidden dark:block"
+            style={{ width: 18, height: 18 }}
             priority
           />
           <Image
@@ -21,13 +22,15 @@ export function baseOptions(): BaseLayoutProps {
             width={18}
             height={18}
             className="block dark:hidden"
+            style={{ width: 18, height: 18 }}
             priority
           />
           <span
             style={{
-              fontFamily: 'var(--font-cal-sans)',
+              fontFamily: 'var(--font-heading)',
               fontSize: '0.9375rem',
               fontWeight: 600,
+              lineHeight: 1,
               color: 'var(--color-fd-foreground)',
             }}
           >
