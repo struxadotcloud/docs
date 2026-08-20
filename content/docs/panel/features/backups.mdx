@@ -1,0 +1,55 @@
+---
+title: Backups
+description: Configure where server backups are stored — operator destinations and per-user Google Drive.
+---
+
+Struxa backups are stored through **backup destinations**: operator-owned storage (object storage, Proxmox Backup Server, restic, and more) plus an optional per-user **Google Drive** integration. All destination configuration lives in the Panel database; Wings fetches what it needs at backup time.
+
+## Backup destinations
+
+Destinations are configured at two levels:
+
+- **Global default** — Admin → Settings → Backups. New nodes without their own destination inherit it.
+- **Per-node override** — node create/edit pages (Admin → Nodes). Overrides the global default for that node's servers.
+
+With neither set, backups fall back to the local Wings adapter and are stored on the node itself. All destination config, including secrets, is encrypted at rest with the instance `DATABASE_ENCRYPTION_KEY`.
+
+| Type | What it needs | Notes |
+|---|---|---|
+| Local (wings) | nothing | Backups land in the node's local backup directory |
+| ddup-bak | nothing | Deduplicated backups via the node's ddup-bak installation |
+| S3 / Object Storage | endpoint, region, bucket, access/secret keys | Uploads use presigned multipart (64 MiB parts). Panel downloads are **opt-in** per destination — see below |
+| Restic | repository URL, optional password, retry lock, env vars | Password travels to Wings as `RESTIC_PASSWORD` |
+| Proxmox Backup Server | URL, datastore, token, optional namespace/fingerprint | |
+| Kopia | repository URL, username/password, optional fingerprint/tags | |
+
+<Callout type="warn">
+  **S3 downloads from the panel** are disabled by default (`Allow downloads from the panel`). Enabling them lets users download backup files directly in the browser — this requires the S3 endpoint to be publicly reachable from users' browsers, not just from your nodes.
+</Callout>
+
+## Google Drive
+
+Users can save backups to **their personal Google Drive**. This is fully optional — nothing appears in the UI until an operator configures it.
+
+### Operator setup
+
+1. Create a Google Cloud project and enable the **Drive API**
+2. Create OAuth client credentials (Web application) in Google Cloud Console
+3. Add the redirect URI shown in Admin → Settings → Backups (`{panel URL}/api/account/google-drive/callback`)
+4. Paste the client ID and secret in Admin → Settings → Backups and save
+
+While your Google app is in **testing mode** (the default), add each user's email as a test user in the Google Cloud Console, otherwise their connection will be rejected by Google.
+
+### User flow
+
+1. Connect the account: **Account → Google Drive → Connect Google Drive** (grants `drive.file` + `userinfo.email` — only files created by Struxa are accessible)
+2. On a server's **Backups** page the create button becomes a dropdown — choose **Backup to Google Drive**
+3. Backups land in `Struxa Backups/{server name} (id)` in the user's Drive; rows show a Google badge
+
+Download, restore, and delete work exactly like other backups — downloads stream through the Panel, restores are pulled by Wings, and deleting a backup removes the Drive file too (including schedule-driven retention deletes).
+
+### Behavior notes
+
+- **Plan backup limits do not apply** to Drive backups — they neither count toward nor are blocked by the limit, since the storage is the user's own
+- Disconnecting revokes the Google token server-side; existing backups stay listed but their files can no longer be fetched
+- Reconnecting must use the **same Google account** as before, otherwise the connection is refused so existing backups don't become orphaned

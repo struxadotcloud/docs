@@ -1,0 +1,52 @@
+---
+title: Backup Adapters
+description: How Wings stores backups — adapter dispatch, panel config fetching, and the Google Drive adapter.
+---
+
+Wings supports multiple backup adapters. The Panel picks the adapter per backup and records it on the backup row; Wings dispatches on that value.
+
+## Adapters
+
+| Adapter | Value | Where the data goes |
+|---|---|---|
+| Wings (local) | `wings` | Node's local backup directory |
+| ddup-bak | `ddup-bak` | ddup-bak repository on the node |
+| S3 | `s3` | S3-compatible storage via presigned multipart uploads issued by the Panel |
+| Restic | `restic` | restic repository (config fetched from the Panel per backup) |
+| Proxmox Backup Server | `proxmox-backup-server` | PBS datastore |
+| Kopia | `kopia` | Kopia repository |
+| Google Drive | `google-drive` | The connected user's personal Google Drive |
+
+External adapters (restic, pbs, kopia, google-drive) fetch their configuration from the Panel at operation time via `GET /api/remote/backups/{uuid}/{adapter}`, authenticated with the node token. S3 receives presigned upload URLs instead of credentials.
+
+## Google Drive adapter
+
+Introduced with the per-user Google Drive backups feature (Panel: Admin → Settings → Backups).
+
+**Create** — the archive is buffered to `{backup_directory}/{uuid}.gdrive.tar.gz` (gzip), then uploaded through the Google Drive **resumable upload** protocol: a session is created in the per-server folder the Panel resolves, chunks of 1 MiB are PUT sequentially with `Content-Range`, and the final response returns the file id, which Wings reports back to the Panel.
+
+**Tokens** — the Panel supplies a user access token, a refresh token, and the operator's OAuth client credentials. On a `401` Wings refreshes the access token itself (POST `oauth2.googleapis.com/token`) and retries; on `404` (expired session) it starts a new session. Retries use exponential backoff capped by `system.backups.gdrive.retry_limit`.
+
+**Restore** — Wings fetches the backup config, downloads `files/{id}?alt=media`, and untars through the same pipeline as other adapters.
+
+**Delete** — best-effort `DELETE files/{id}`. Failures (e.g. revoked access) are swallowed so the Panel row can still be removed; the Drive file is then left for the user to clean up.
+
+### Configuration
+
+All fields are optional and defaulted in `config.yml` under `system.backups.gdrive`:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `create_threads` | `4` | Compression threads while building the archive |
+| `part_upload_timeout` | `7200` | Per-request HTTP timeout (seconds) |
+| `retry_limit` | `10` | Max attempts per chunk |
+
+<Callout type="warn">
+  The config response for a Google Drive backup contains the user's OAuth tokens and the operator's OAuth client secret — the same trust model as the Proxmox Backup Server adapter, which already receives `token_secret` from the Panel. A Wings node (or its node token) can therefore read backups of its servers' users; protect node tokens accordingly.
+</Callout>
+
+### Requirements
+
+- Panel configured with Google OAuth client credentials (Admin → Settings → Backups)
+- The user must have connected their Google Drive in Account settings
+- Outbound HTTPS to `www.googleapis.com` and `oauth2.googleapis.com` from the node
