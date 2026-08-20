@@ -1,5 +1,5 @@
 {
   "title": "Wings",
   "defaultOpen": true,
-  "pages": ["index", "environment", "installation", "updating", "next-steps", "disk-limiters"]
+  "pages": ["index", "environment", "installation", "updating", "next-steps", "backup-adapters", "disk-limiters"]
 }
