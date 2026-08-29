@@ -1,72 +1,30 @@
 ---
 title: Plans & Products
-description: How to structure your billing catalog with categories, products, pricing tiers, and resource limits.
+description: How the billing catalog is structured — categories, products, pricing tiers, and resource limits.
 ---
 
-The billing catalog is a three-level hierarchy: **categories** contain **products**, and products contain **pricing tiers**. Everything is managed in **Admin → Billing → Catalog**.
-
-Internally, each product has a single underlying plan record that holds its resource limits, and that plan owns the pricing tiers — but the admin UI only exposes categories, products, and pricing tiers, so this is transparent in day-to-day use.
+The catalog is a simple hierarchy: **categories** contain **products**, and each product has **pricing tiers**. You build all of it under **Admin → Billing → Catalog**.
 
 ## Categories
 
-A category is the top-level grouping visible on the `/billing` page.
-
-| Field | Description |
-|---|---|
-| Name | Display name shown in the category grid |
-| Description | Short text shown below the name |
-| Icon | Optional image shown in the category card |
-| Banner | Optional wide image shown at the top of the category detail page |
-
-Category detail pages are served at `/billing/[slug]` where the slug is derived from the category name.
+A category is the top-level grouping users see on `/billing`. Give it a name, a short description, an optional icon, and a banner image. Each category gets its own page at `/billing/[slug]`.
 
 ## Products
 
-Products live inside a category and represent a distinct hosting tier or offering.
-
-| Field | Description |
-|---|---|
-| Name | Display name shown in the product list |
-| Description | Optional detail text |
-| Featured | Highlighted visually in the product grid (only one featured product per category) |
+A product lives inside a category and represents one hosting offering. Name it, write an optional description, and mark it **featured** to highlight it in the grid (one featured product per category).
 
 ## Pricing tiers
 
-Each product can have multiple pricing tiers — one per billing duration. Users pick a duration during the purchase wizard.
+A product can have several pricing tiers — one per billing period. Users choose the period during purchase:
 
-| Duration | Period |
-|---|---|
-| `7day` | 7 days |
-| `1month` | 1 month |
-| `3months` | 3 months |
-| `6months` | 6 months |
-| `1year` | 1 year |
+7 days · 1 month · 3 months · 6 months · 1 year
 
-The price is stored in the instance's default currency (set in **Admin → Billing → Settings**).
+Prices are stored in the instance's default currency (set under **Admin → Billing → Settings**).
 
 ## Resource limits
 
-Resource limits are defined once per product, not per pricing tier — every duration of a product provisions the same CPU, RAM, disk, and other limits; only the price and billing period change between tiers.
+Limits are set once per product and apply to every tier: CPU, RAM, and disk are applied to the server on purchase, plus limits for backups, allocations, and databases. You can also restrict a product to specific eggs (server types) or nodes, and cap how many allocations it can sell.
 
-| Limit | Unit | Description |
-|---|---|---|
-| CPU | cores | Applied to the server on purchase |
-| RAM | GB | Applied to the server on purchase |
-| Disk | GB | Applied to the server on purchase |
-| Backups | count | Stored on the plan, but not currently enforced — the server gets no backup limit |
-| Allocations | count | Stored on the plan and used for the sold-out/capacity check, but the server is only ever given the single allocation picked during purchase |
-| Databases | count | Stored on the plan, but not currently enforced — the server gets no database limit |
-| Allowed eggs | egg IDs | If set, restricts which server types the user can select |
-| Node restrictions | node IDs | If set, limits which nodes the server may be placed on |
+Before completing a purchase, the panel checks that a suitable node has enough RAM and disk headroom — nodes can allow overallocation up to a configured percentage.
 
-Capacity is checked at purchase time using a soft check against RAM and disk (not CPU) — nodes can be configured to allow overallocation up to a headroom percentage.
-
-## Uploading images
-
-Category icons and banner images are uploaded via the panel's file API. When using the admin UI, the upload is handled for you. If you're managing the catalog via API, send a `multipart/form-data` POST to:
-
-```
-POST /api/files/upload/billing-image
-```
-
-The response returns the file URL to store in the category record.
+Category icons and banner images are uploaded right from the admin UI.

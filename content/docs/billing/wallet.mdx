@@ -1,57 +1,26 @@
 ---
 title: Wallet & Payments
-description: How the wallet works, topping up via payment providers, transaction history, auto top-up, and the referral program.
+description: How the wallet works — topping up, transaction history, and referrals.
 ---
 
-Every user has a wallet — a pre-loaded credit balance used to pay for plans and renewals. Users fund their wallet through a payment provider; the panel credits the balance when a webhook confirms the payment.
+Every user has a wallet: a prepaid balance used to pay for plans and renewals. It's funded through a payment provider, and the balance updates automatically when the provider confirms a payment.
 
 ## Topping up
 
-Users navigate to `/billing/wallet` and click **Top Up**. The flow:
+On `/billing/wallet`, users click **Top Up**, pick a provider, and choose an amount — a preset or any custom value. Payment happens on the provider's own checkout page, and the wallet is credited as soon as the provider's webhook arrives. Every top-up shows up in the transaction history.
 
-1. Select a payment provider (any enabled provider appears as an option)
-2. Choose an amount — preset options ($5, $10, $25, $50) or a custom amount
-3. The panel creates a checkout session with the external provider
-4. The user completes payment on the provider's hosted page
-5. The provider sends a webhook to `/api/billing/webhook/[provider]`
-6. The webhook handler validates the payload, credits the wallet, and records a `topup` transaction
+Admins can also credit or debit a wallet directly from the user's page (**Admin → Users → [user]**) — handy for manual payments or refunds.
 
-<Callout type="info">
-  Admins can credit or debit a wallet directly from a user's page at **Admin → Users → [user]** without going through a payment provider. These show up as `adjustment` transactions. Referral bonuses and commissions are also recorded with type `adjustment`.
-</Callout>
+## Referrals
 
-## Transaction types
+Turn referrals on under **Admin → Billing → Settings** and set the two percentages: a bonus for the new user and a commission for the referrer.
 
-| Type | When it occurs |
-|---|---|
-| `topup` | Wallet funded via a payment provider |
-| `charge` | A subscription purchase or renewal debits the wallet |
-| `adjustment` | Manual admin credit/debit, and referral bonuses/commissions |
-| `refund` | Reserved in the schema; nothing in the current code creates a `refund` transaction |
-| `expired` | Reserved in the schema; there is no balance-expiry feature |
+Each user gets a personal referral code (**Wallet → Referrals**). When a new user applies it before their first top-up, both sides earn: the new user gets a bonus on top of what they paid, and the referrer gets a commission based on that first top-up.
 
-The full transaction history is visible to users at `/billing/wallet` and to admins on the user's page at **Admin → Users → [user]**.
+The details:
 
-## Auto top-up
-
-<Callout type="warn">
-  The wallet has `autoTopUpEnabled`/threshold/amount columns in the database, but there is currently no setting to configure them and no code that triggers an automatic top-up. This feature does not work yet — treat any mention of it elsewhere as aspirational.
-</Callout>
-
-## Referral program
-
-The referral program is enabled via the `billing_referral_enabled` setting in **Admin → Billing → Settings**.
-
-Users generate a personal referral code in **Wallet → Referrals** (3–30 characters, alphanumeric plus `-` and `_`). When a new user applies the code and then completes their first wallet top-up:
-
-- The **referee** gets an extra bonus credited to their wallet, on top of the amount they topped up (configurable percentage of the top-up amount) — it is a bonus credit, not a discount on the price they pay
-- The **referrer** gets a commission credited to their wallet (configurable percentage of the referee's top-up)
-
-Rules:
-- The code is applied any time before the first top-up (via `applyReferralCode`), but the bonus and commission are only credited when that first top-up webhook is processed
-- Bonuses are awarded only on the referee's first top-up
-- A user cannot use their own referral code (self-referral is blocked)
-- A user can only ever apply one referral code, ever (attempting a second one fails)
-- Each code tracks its total usage count
-
-Configure the bonus and commission percentages in **Admin → Billing → Settings → Referrals**.
+- the code must be applied before the first top-up, and both credits land when that top-up completes
+- bonuses apply to the first top-up only
+- your own code is for sharing with new users — you apply a code from someone else
+- each account can apply exactly one code
+- each code keeps a total usage count

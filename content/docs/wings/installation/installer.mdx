@@ -3,7 +3,7 @@ title: Installer
 description: Install Wings as part of the official automated installer.
 ---
 
-The easiest way to install Wings is to select **Dashboard + Wings** during the [Panel installer](/panel/installation/installer). The installer sets up Wings on the same machine in one run, or you can point it at a separate node.
+The easiest way to install Wings is to select **Dashboard + Wings** during the [Panel installer](/panel/installation/installer). The installer sets up Wings, registers the node in the Panel, and links the two together — the node comes up connected, with no manual token copying.
 
 ## Run the Installer
 
@@ -13,30 +13,26 @@ bash <(curl -fsSL https://install.struxa.cloud)
 
 When prompted for installation mode, choose **Dashboard + Wings**.
 
+## What the Installer Asks You
+
+- **Node domain or IP** - the address the Panel will use to reach this node
+- **Location name** - groups this node with others in the same region (defaults to `Default`)
+- **Node name** - defaults to the node's domain
+- **Timezone, UID, and GID** - used for container permissions. Defaults to UTC / 988 / 988
+
 ## What the Installer Does for Wings
 
 1. **Downloads the Wings compose file** from `struxadotcloud/wings` on GitHub.
-2. **Asks for the Wings domain or IP** - the address the Panel will use to reach this node.
-3. **Asks for timezone, UID, and GID** - used for container permissions. Defaults to UTC / 988 / 988.
-4. **Writes `config.yml`** to `/opt/wings/config/config.yml` and `/etc/pterodactyl/config.yml`.
-5. **Configures a reverse proxy** for Wings on port 8080 (nginx, Apache, or Caddy).
-6. **Starts Wings** - the container comes up but will show as disconnected until you add the node token from the Panel.
+2. **Registers the node in the Panel** - creates the node, generates its token, and returns a complete configuration.
+3. **Writes `config.yml`** with the real token to `/opt/wings/config/config.yml` and `/etc/pterodactyl/config.yml`.
+4. **Configures a reverse proxy** for Wings on port 8080 (nginx, Apache, or Caddy).
+5. **Starts Wings** - the node appears as connected in the Panel within about 30 seconds.
 
-## Adding the Node Token
+The node's memory and disk limits default to 4096 MB and 50 GB. You can adjust them any time in **Admin → Nodes → your node**.
 
-Wings cannot connect to the Panel until it has a valid token. After the installer finishes:
+## Manual Installations
 
-1. Log in to the Panel as admin
-2. Go to **Admin - Nodes - Create New Node**
-3. Fill in the FQDN and resource limits, save
-4. Open the **Configuration** tab and copy the generated `config.yml` block
-5. Paste it into `/etc/pterodactyl/config.yml` on the Wings host, replacing the placeholder values
-6. Restart Wings:
-   ```bash
-   cd /opt/wings && docker compose restart
-   ```
-
-The node should appear as connected in the Panel within 30 seconds.
+If you install Wings without the installer (or want to link a node yourself), the [Docker guide](/wings/installation/docker) covers it: create the node in **Admin → Nodes**, then copy the generated `config.yml` from the node's **Configuration** tab onto the Wings host.
 
 ## Updating
 
@@ -52,4 +48,4 @@ The updater handles both the Panel and Wings. Wings is updated by pulling the la
 |---|---|
 | `/opt/wings/compose.yml` | Wings compose file |
 | `/opt/wings/config/config.yml` | Wings configuration |
-| `/etc/pterodactyl/config.yml` | Symlinked system copy of the config |
+| `/etc/pterodactyl/config.yml` | System copy of the config |

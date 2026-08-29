@@ -1,0 +1,47 @@
+---
+title: Notifications
+description: Get notified about server and panel events via Discord webhooks and Telegram bots.
+---
+
+Struxa sends notifications to **Discord** (via webhook) and **Telegram** (via bot token and chat ID). Admins can set up endpoints that receive panel-wide events, and each user can set up their own endpoints for events about their servers.
+
+## What gets notified
+
+### Server owners
+
+Each user is notified about events on the servers they own:
+
+| Event | When it fires |
+|---|---|
+| Power | A server is started, stopped, restarted, or killed |
+| Backups | A backup starts, is deleted, or a restore starts |
+| Status | A server goes online or offline |
+
+### Admins
+
+Admins are notified about events across the whole panel:
+
+| Event | When it fires |
+|---|---|
+| Signups | A new account registers |
+| Servers | A server is created or deleted |
+| Users | A user account is deleted |
+| Status | Any server goes online or offline |
+
+## Admin setup
+
+Go to **Admin → Settings → Notifications**. There are two endpoints, each with an enable toggle, its credentials, and a **Send Test** button:
+
+- **Discord** — a webhook URL. Create one in your Discord channel under **Channel Settings → Integrations → Webhooks**.
+- **Telegram** — a bot token and chat ID. Create a bot with [@BotFather](https://t.me/BotFather) and grab its token, then find your chat ID.
+
+The same page has a **User Notifications** section with the toggle **Allow users to set up their own notifications**. When enabled, users see a Notifications tab in their account settings; when disabled, the tab is hidden.
+
+## User setup
+
+Open **Account → Notifications**. There are two channels, each with a **Save** button and a **Send Test** button:
+
+- **Discord** — paste a webhook URL from a channel you manage.
+- **Telegram** — paste a bot token and the chat ID that should receive messages.
+
+Users are notified about power, backup, and status events for the servers they own. Sending a test message is a good way to confirm the credentials work before relying on them.

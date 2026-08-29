@@ -9,8 +9,8 @@ Struxa backups are stored through **backup destinations**: operator-owned storag
 
 Destinations are configured at two levels:
 
-- **Global default** — Admin → Settings → Backups. New nodes without their own destination inherit it.
-- **Per-node override** — node create/edit pages (Admin → Nodes). Overrides the global default for that node's servers.
+- **Fleet-wide default** — Admin → Settings → Backups. Every node uses it unless the node has its own destination.
+- **Per-node override** — node create/edit pages (Admin → Nodes). Replaces the fleet-wide default for that node's servers.
 
 With neither set, backups fall back to the local Wings adapter and are stored on the node itself. All destination config, including secrets, is encrypted at rest with the instance `DATABASE_ENCRYPTION_KEY`.
 
@@ -24,7 +24,7 @@ With neither set, backups fall back to the local Wings adapter and are stored on
 | Kopia | repository URL, username/password, optional fingerprint/tags | |
 
 <Callout type="warn">
-  **S3 downloads from the panel** are disabled by default (`Allow downloads from the panel`). Enabling them lets users download backup files directly in the browser — this requires the S3 endpoint to be publicly reachable from users' browsers, not just from your nodes.
+  **S3 downloads from the panel** are opt-in per destination (`Allow downloads from the panel`). With them on, users download backup files directly in the browser — for that to work, the S3 endpoint must be publicly reachable from users' browsers, not just from your nodes.
 </Callout>
 
 ## Google Drive
@@ -38,7 +38,7 @@ Users can save backups to **their personal Google Drive**. This is fully optiona
 3. Add the redirect URI shown in Admin → Settings → Backups (`{panel URL}/api/account/google-drive/callback`)
 4. Paste the client ID and secret in Admin → Settings → Backups and save
 
-While your Google app is in **testing mode** (the default), add each user's email as a test user in the Google Cloud Console, otherwise their connection will be rejected by Google.
+While your Google app is in **testing mode** (the default), add each user's email as a test user in the Google Cloud Console.
 
 ### User flow
 
@@ -50,6 +50,6 @@ Download, restore, and delete work exactly like other backups — downloads stre
 
 ### Behavior notes
 
-- **Plan backup limits do not apply** to Drive backups — they neither count toward nor are blocked by the limit, since the storage is the user's own
-- Disconnecting revokes the Google token server-side; existing backups stay listed but their files can no longer be fetched
-- Reconnecting must use the **same Google account** as before, otherwise the connection is refused so existing backups don't become orphaned
+- Drive backups use the user's own Google storage, so they count separately from plan backup limits
+- Disconnecting revokes the Google token server-side; existing backups stay listed until the account is reconnected
+- Reconnect with the **same Google account** you used originally — that keeps existing backups tied to your Drive

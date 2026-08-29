@@ -23,7 +23,7 @@ When Wings creates a server, it creates a Btrfs subvolume at the server's data p
 findmnt -T /var/lib/pterodactyl
 ```
 
-The `FSTYPE` column should show `btrfs`. If it shows `ext4` or another type, Btrfs subvolumes are not available on this mount.
+The `FSTYPE` column should show `btrfs` — Btrfs subvolumes work on that mount.
 
 ### 2. Enable Btrfs Quotas
 

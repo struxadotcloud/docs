@@ -3,11 +3,11 @@ title: Plugins & Mods
 description: Browse and install Minecraft plugins and mods from Modrinth directly onto a server.
 ---
 
-Servers running a Minecraft egg can get a **Plugins** or **Mods** tab that lets users search Modrinth and install a resource with one click. This is a lightweight, client-side feature — there is no dedicated backend API or database table behind it, and it currently only integrates with Modrinth (not CurseForge, SpigotMC, or Hangar).
+Servers running a Minecraft egg can get a **Plugins** or **Mods** tab that lets users search Modrinth and install a resource with one click. It runs entirely in the browser against Modrinth's public API, so there is nothing to host or configure beyond the egg itself.
 
 ## Enabling it for an egg
 
-The tab is gated by a feature tag on the egg, not by any dedicated toggle. In **Admin → Nests → [nest] → [egg]**, add one or both of these exact strings to the egg's **Features** list:
+The tab is gated by a feature tag on the egg. In **Admin → Nests → [nest] → [egg]**, add one or both of these exact strings to the egg's **Features** list:
 
 | Feature tag | Adds this tab | Loaders shown |
 |---|---|---|
@@ -15,7 +15,7 @@ The tab is gated by a feature tag on the egg, not by any dedicated toggle. In **
 | `minecraft_mods` | **Mods** | Fabric, Forge, NeoForge, Quilt |
 
 <Callout type="warn">
-  These tags are free-text — the admin UI does not offer a checkbox or dropdown for them, so a typo silently leaves the tab hidden with no error. There's also no built-in detection of "this egg is Minecraft"; adding either tag to any egg (Minecraft or not) makes the corresponding tab appear for servers using it.
+  The field is free text — type the tags exactly as shown above, since a typo leaves the tab hidden. Add the tags to any Minecraft egg you want the tabs on.
 </Callout>
 
 No bundled or imported egg ships with these tags by default — an admin has to add them manually per egg.
@@ -31,13 +31,6 @@ Once enabled, users see a **Plugins** and/or **Mods** entry in the server sideba
 
 Installing sends the selected file's download URL to the server's file API, which tells the node to download it into `/plugins` (for plugins) or `/mods` (for mods) on that server.
 
-<Callout type="warn">
-  "Install" only confirms that the download request was accepted — it does not wait for or confirm that the file actually finished downloading. Check the **Files** tab afterward to verify the plugin or mod actually landed. There is also no record of installs in the server's activity log, unlike other file operations.
+<Callout type="info">
+  **Install** starts the download on the node — check the **Files** tab to confirm the file landed.
 </Callout>
-
-## What it doesn't do
-
-- **No CurseForge, SpigotMC, or Hangar support** — only Modrinth's public API is queried, from the user's browser directly (no server-side proxy, no API key).
-- **No compatibility enforcement** — the version list is filtered client-side by the loaders Modrinth reports for that version, but a user can still pick a mismatched loader/version and the install will proceed anyway.
-- **No custom install path** — files always go to `/plugins` or `/mods`; there's no way to change this per egg if a server's actual layout differs.
-- **No install history or status tracking** — nothing records what was installed, when, or by whom beyond what ends up in the Files tab.

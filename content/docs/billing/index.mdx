@@ -3,34 +3,22 @@ title: Billing
 description: Struxa's built-in billing module handles subscriptions, wallet top-ups, and referrals without any external billing platform required.
 ---
 
-Struxa includes a built-in billing module that lets you sell game server hosting plans directly from your panel. Users browse a product catalog, purchase a plan with their wallet balance, and get a server provisioned automatically. Admins manage everything from **Admin → Billing**.
+Struxa includes a built-in billing module that lets you sell game server hosting plans directly from your panel. Users browse a product catalog, buy a plan with their wallet balance, and get a game server provisioned automatically.
 
-## What billing provides
+Billing is off by default. Turn it on under **Admin → Billing → Settings**, where you also pick the default currency and an invoice prefix.
 
-| Feature | Description |
-|---|---|
-| **Product catalog** | Categories and products with pricing tiers, displayed at `/billing` |
-| **Subscriptions** | Time-limited plans tied to a running server — statuses are `active`, `trialing`, `past_due`, `canceled`, `unpaid`, `paused`, but only `active`, `canceled`, and `past_due` are ever set by the current code |
-| **Wallet** | Pre-loaded credit balance; users top up via a payment provider and spend on plans |
-| **Payment providers** | Stripe and SimPay supported; webhooks credit the wallet on payment confirmation |
-| **Referrals** | User-generated referral codes that credit a bonus to the referee and a commission to the referrer on the referee's first top-up |
+## What you get
 
-## Where billing lives in the panel
+- **Product catalog** — categories and products with pricing tiers, shown to users at `/billing`
+- **Subscriptions** — time-limited plans tied to a running server, with automatic renewal
+- **Wallet** — a prepaid balance users top up through a payment provider and spend on plans
+- **Payment providers** — Stripe and SimPay are built in; payments credit the wallet automatically
+- **Referrals** — users share referral codes that earn them and their friends wallet credit on the first top-up
 
-| URL | Audience | Purpose |
-|---|---|---|
-| `/billing` | Users | Browse categories, view products, start a purchase |
-| `/billing/[slug]` | Users | 4-step purchase wizard for a category |
-| `/billing/wallet` | Users | Top up balance, view transaction history, manage referral code |
-| `/admin/billing` | Admins | Settings, payment providers, and catalog — tabs are **Settings**, **Providers**, **Catalog** |
-| `/admin/users/[id]` | Admins | View a user's wallet balance, subscriptions, and wallet transactions; adjust their balance |
+## Where everything lives
 
-## Enabling billing
+- Users see the catalog at `/billing`, buy through a step-by-step wizard, and manage their wallet at `/billing/wallet`
+- Admins manage everything under **Admin → Billing** — the **Settings**, **Providers**, and **Catalog** tabs
+- On a user's page (**Admin → Users → [user]**) you can see their wallet balance and subscriptions, and adjust their balance
 
-Billing is off by default. To turn it on, go to **Admin → Billing → Settings** and enable the **Billing** toggle. You can also set the default currency and invoice number prefix from that tab.
-
-The `billing_enabled` setting acts as a global kill switch — disabling it hides all billing UI from users without affecting existing subscription data.
-
-## Getting started
-
-Head to [Quickstart](/billing/quickstart) to configure a payment provider, build your first product catalog, and run a test purchase end-to-end.
+Start with the [Quickstart](/billing/quickstart) to get a payment provider, a product, and a test purchase running end to end.

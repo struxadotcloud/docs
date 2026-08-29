@@ -29,7 +29,7 @@ Introduced with the per-user Google Drive backups feature (Panel: Admin → Sett
 
 **Restore** — Wings fetches the backup config, downloads `files/{id}?alt=media`, and untars through the same pipeline as other adapters.
 
-**Delete** — best-effort `DELETE files/{id}`. Failures (e.g. revoked access) are swallowed so the Panel row can still be removed; the Drive file is then left for the user to clean up.
+**Delete** — best-effort `DELETE files/{id}`. If the Drive file can't be deleted (for example, access was revoked), the backup row in the Panel is still removed and the file stays in Drive.
 
 ### Configuration
 
@@ -42,7 +42,7 @@ All fields are optional and defaulted in `config.yml` under `system.backups.gdri
 | `retry_limit` | `10` | Max attempts per chunk |
 
 <Callout type="warn">
-  The config response for a Google Drive backup contains the user's OAuth tokens and the operator's OAuth client secret — the same trust model as the Proxmox Backup Server adapter, which already receives `token_secret` from the Panel. A Wings node (or its node token) can therefore read backups of its servers' users; protect node tokens accordingly.
+  Treat node tokens with care: they authenticate requests that fetch backup configuration, including user OAuth tokens and the operator's OAuth client secret. Store them securely and rotate them if a node is decommissioned.
 </Callout>
 
 ### Requirements

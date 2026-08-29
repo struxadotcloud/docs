@@ -1,26 +1,26 @@
-﻿---
+---
 title: Introduction
 description: Struxa is a self-hosted game server management platform.
 ---
 
-Struxa is a free, open-source game server management panel built for people who want to run their own infrastructure - without vendor lock-in, without paywalled features, and without compromising on control.
+Struxa is a free, open-source game server management panel. You self-host the whole stack — panel, node agents, and database — and keep full control over your infrastructure.
 
 <img src="https://struxa.cloud/images/banner.png" alt="Struxa — manage and scale your game servers" style={{ width: '100%', borderRadius: '8px' }} />
 
 ## Why Struxa?
 
-Most game server panels are either too limited for serious use or too expensive to run at scale. Struxa takes a different approach: a clean, modern UI backed by a fast, native node agent - built on technology that doesn't get in the way.
+Struxa pairs a clean, modern UI with a fast, native node agent — a stack that stays out of your way.
 
-- **Full stack you own** - Panel, Wings, and database all self-hosted. No cloud dependency, no calling home.
-- **Pterodactyl-compatible** - Existing eggs, nests, and Wings configs work without modification. Migration is a drop-in.
-- **No feature tiers** - Everything is available to everyone. Schedules, backups, SFTP, multi-node - all included.
-- **Built to last** - Next.js frontend, Rust node agent, MySQL persistence. Boring, proven technology chosen for reliability over novelty.
+- **Full stack you own** - Panel, Wings, and database all run on your hardware. Your data stays on your network.
+- **Pterodactyl-compatible** - Existing eggs, nests, and Wings configs work as-is. Migration is a drop-in.
+- **Every feature included** - Schedules, backups, SFTP, multi-node, notifications, billing — everything ships with the free, open-source release.
+- **Built to last** - Next.js frontend, Rust node agent, MySQL persistence. Proven technology chosen for reliability.
 
 ## How It Works
 
 Struxa has two components you deploy yourself:
 
-**Panel** - the web interface. Manages users, nodes, eggs, schedules, and backups. Runs as a Docker container alongside MySQL. Operators and end users interact with everything through here.
+**Panel** - the web interface. Manages users, nodes, eggs, schedules, backups, and billing. Runs as a Docker container alongside MySQL. Operators and end users interact with everything through here.
 
 **Wings** - the node agent. Runs on each machine that hosts game servers. Receives instructions from the Panel, manages Docker containers, streams console output, and handles SFTP. Built in Rust for low overhead across many concurrent servers.
 
@@ -32,5 +32,14 @@ Struxa is designed for:
 
 - **Hosting providers** running fleets of game servers for customers
 - **Communities** self-hosting servers for their members
-- **Homelab operators** who want full control without the Pterodactyl PHP stack
+- **Homelab operators** who want full control over a modern stack
 
+## Installing
+
+The fastest path is the official installer — one command sets up the Panel, your admin account, and optionally a Wings node:
+
+```bash
+bash <(curl -fsSL https://install.struxa.cloud)
+```
+
+Head to the [Panel installer guide](/panel/installation/installer) for the full walkthrough.
