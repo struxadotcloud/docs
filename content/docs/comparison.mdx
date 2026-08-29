@@ -1,0 +1,42 @@
+---
+title: Comparison
+description: How Struxa compares to Pterodactyl, Pelican, Calagopus, FeatherPanel, and Pyrodactyl.
+---
+
+Struxa is a self-hosted game server panel in the same family as Pterodactyl and its forks — every panel on this page can run Pterodactyl-style eggs and manages game servers in Docker containers through a node agent. The differences are in the stack, the installer, and which hosting features come built in.
+
+## At a Glance
+
+| | **Struxa** | **Pterodactyl** | **Pelican** | **Calagopus** | **FeatherPanel** | **Pyrodactyl** |
+|---|---|---|---|---|---|---|
+| Panel stack | Next.js 16 + TypeScript | PHP (Laravel) + React | PHP (Laravel) + Filament | Rust (Axum) + React | PHP 8.5 + Next.js 16 (React 19) | PHP (Laravel) + React 19 |
+| Node agent | Wings (Rust) | Wings (Go) | Wings (Go, compatible) | Wings (Rust) | FeatherWings | Elytra |
+| Eggs | Pterodactyl-compatible | Nests & eggs | Pterodactyl-compatible + egg marketplace | Pterodactyl-compatible | Partial Pterodactyl compatibility | Pterodactyl-based |
+| Installer | One-line script; auto-links Wings | Community install script | First-run web installer | All-in-one Docker image | One-click script | Manual / Docker Compose |
+| Built-in billing | Yes — catalog, subscriptions, wallet, Stripe/SimPay, referrals | — (WHMCS/Blesta modules) | — (WHMCS/Blesta modules) | — (Paymenter/WHMCS modules) | — | — |
+| Notifications | Discord + Telegram, for admins and users | — | Webhooks | — | — | — |
+| Backups | 6 destinations configured in the UI (fleet-wide or per-node), plus per-user Google Drive | Local + S3 | Local + S3 | 8 drivers, configured in the panel | Local | Local |
+| Disk limiters | Btrfs, XFS, ZFS, and FUSE | — | — | Btrfs, XFS, ZFS, and FUSE | — | — |
+| Development status | Active | Active | Active | Active (younger project) | Active | Pre-release |
+
+Cells marked — mean the feature isn't built into that panel (some can be added through third-party modules).
+
+## What Makes Struxa Different
+
+- **One-command install that links everything.** The installer sets up the Panel, creates your admin account, registers your node, writes Wings' config with a live token, and starts it connected — no manual token copying (see [Panel installer](/panel/installation/installer)).
+- **Billing built into the panel.** Product catalog, pricing tiers, subscriptions, wallet top-ups via Stripe or SimPay, and referral codes — you sell hosting without bolting on WHMCS (see [Billing](/billing)).
+- **Notifications for admins and users.** Discord webhooks and Telegram bots for power, backup, and status events — plus signup and server/user changes for admins (see [Notifications](/panel/features/notifications)).
+- **Backup destinations configured in the panel.** Fleet-wide defaults and per-node overrides for local, ddup-bak, S3, restic, Proxmox Backup Server, and Kopia — plus optional per-user Google Drive (see [Backups](/panel/features/backups)).
+- **Native disk limits with a fallback.** Kernel-level Btrfs, XFS, and ZFS limiters, plus a FUSE limiter for filesystems without quota support (see [Disk limiters](/wings/disk-limiters/fusequota)).
+- **Pterodactyl-compatible Rust node agent.** Eggs, nests, and node configurations work unchanged, with fast container management and low overhead across many concurrent servers.
+- **Modrinth browsing in the panel.** Servers on Minecraft eggs get Plugins and Mods tabs that search Modrinth and install with one click (see [Plugins & Mods](/panel/features/plugins-and-mods)).
+
+## Where the Others Shine
+
+Each project on this page has features worth knowing about:
+
+- **Pterodactyl** — the original and still actively maintained (v1.15.0 shipped August 2026). The largest ecosystem of eggs, themes, and community knowledge, and the most battle-tested Wings daemon.
+- **Pelican** — started by Pterodactyl's maintainers. A modern Filament UI, a panel-native plugin and theme system (install packages straight from the panel), an egg marketplace, OAuth/SSO sign-in, and a choice of MySQL, MariaDB, PostgreSQL, or SQLite.
+- **Calagopus** — a ground-up Rust reimplementation. Full Rust backend, an all-in-one image for single-node setups, native Btrfs/XFS/ZFS/FUSE disk limiters, snapshot-based backups, an SSH remote shell with file history, OAuth (GitHub/Google/Discord), and extension APIs. Its Wings daemon is the closest relative of Struxa's.
+- **FeatherPanel** — built for small footprints. Spell Variables (typed, conditional server variables), AI-driven scaling recommendations, a FeatherWings HTTP API with built-in SFTP, and a plugin/egg marketplace.
+- **Pyrodactyl** — performance- and accessibility-focused. A React 19/Vite frontend with much smaller bundles and faster loads, a granular permission system down to individual actions, and full keyboard/screen-reader support. Still pre-release.

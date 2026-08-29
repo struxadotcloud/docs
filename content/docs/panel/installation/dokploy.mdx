@@ -1,0 +1,39 @@
+---
+title: Dokploy
+description: Deploy the Struxa Panel on Dokploy using the official template.
+---
+
+[Dokploy](https://dokploy.com) is a self-hosted deployment platform — a web UI over Docker with automatic TLS and zero-downtime deploys. Struxa has an official template in the Dokploy template marketplace, which makes this the easiest way to run the Panel on infrastructure you manage with Dokploy.
+
+<Callout type="info">
+  The template deploys the Panel only. Wings is installed separately on each game server node — see [Wings installation](/wings/installation/installer).
+</Callout>
+
+## Deploy
+
+1. Point your domain's DNS at your Dokploy server.
+2. In Dokploy, create a new project and choose **Templates**, then search for **Struxa**.
+3. Set the **domain** variable to your panel domain. Dokploy provisions a TLS certificate for it automatically.
+4. Optionally change the **image tag** from `latest` to a specific release.
+5. Deploy. Dokploy pulls the images and starts the services.
+
+The template also lives in the [Dokploy template directory](https://dokploy.com/templates/struxa).
+
+## What the Template Runs
+
+| Service | Role |
+|---|---|
+| `struxa` | The Panel (port 3001, proxied by Dokploy) |
+| `mysql` | Database (MySQL 8.4) |
+| `minio` | Object storage for the Panel |
+| `migrate` | Runs database migrations before the Panel starts |
+| `watchkeeper` | Background workers (server status, schedules, billing) |
+
+The template generates every secret for you — MySQL passwords, the auth secret, the database encryption key, MinIO keys, and the JWT key pair — and wires the service dependencies so migrations finish before the Panel starts.
+
+## After Deploying
+
+Open your panel domain — on first visit you'll be redirected to `/setup` to create your admin account. Then:
+
+- [Add a Wings node](/wings/installation/installer) so you can create game servers
+- Follow the [Next Steps](/panel/next-steps) for allocations, eggs, and your first server

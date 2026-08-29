@@ -3,7 +3,7 @@ title: Installer
 description: Install the Panel using the official automated installer.
 ---
 
-The recommended way to install Struxa is the official installer script. It handles everything in one run — Docker, secrets generation, webserver configuration, and SSL.
+The recommended way to install Struxa is the official installer script. One command sets up Docker, generates all secrets, creates your admin account, configures a webserver with SSL, and starts the Panel. If you install Wings in the same run, the installer also registers the node in the Panel and connects it for you.
 
 ## One-line Install
 
@@ -17,15 +17,28 @@ bash <(curl -fsSL https://install.struxa.cloud)
   The installer requires root. It reads from `/dev/tty` directly, so running it piped through curl works correctly.
 </Callout>
 
+## What the Installer Asks You
+
+- **Installation mode** - **Dashboard only** or **Dashboard + Wings**
+- **Admin account** - email, password, and display name. This account is created during the install, so you can log in right after it finishes
+- **Panel domain** - used for `APP_URL`, `BETTER_AUTH_URL`, and `CORS_ORIGIN`
+- **Web server** - use your existing nginx, Apache, or Caddy, install nginx fresh, or skip (Docker Compose only)
+- **SSL** - Let's Encrypt certificate, self-signed certificate, or none
+- **Cloudflare Turnstile** - optional bot protection keys
+
+When you choose **Dashboard + Wings**, it also asks for the node's domain or IP, a location name, and a node name.
+
 ## What the Installer Does
 
 1. **Checks prerequisites** - verifies Docker, Docker Compose, curl, and openssl. Offers to install Docker automatically if missing.
 2. **Fetches the latest release** - resolves the current stable tag from GitHub and downloads the production compose file.
 3. **Generates all secrets** - RSA key pair, auth secret, database passwords, and encryption key via openssl. Nothing is reused or hardcoded.
-4. **Asks for your domain** - derives `APP_URL`, `BETTER_AUTH_URL`, and `CORS_ORIGIN` from it automatically.
-5. **Configures a webserver** - detects existing nginx, Apache, or Caddy, or installs nginx fresh. Writes reverse proxy config for the panel.
-6. **Handles SSL** - obtains a Let's Encrypt certificate via certbot, generates a self-signed cert, or skips SSL entirely.
-7. **Starts services** - pulls images and starts the panel and MySQL containers.
+4. **Creates your admin account** - the Panel creates the account through a bootstrap endpoint, so the `/setup` wizard is skipped. (The wizard only appears after manual installs.)
+5. **Configures a web server** - writes the reverse proxy config for the Panel. Skipped if you chose Docker Compose only.
+6. **Handles SSL** - obtains a Let's Encrypt certificate via certbot, generates a self-signed cert, or skips SSL entirely. No certificate is configured if you skipped the web server.
+7. **Starts services** - pulls images and starts the Panel and MySQL containers.
+
+In **Dashboard + Wings** mode it additionally registers the node in the Panel, writes a ready-to-use `config.yml` to Wings, and starts Wings connected. See [Wings - Installer](/wings/installation/installer) for the details.
 
 ## Options
 
@@ -35,8 +48,11 @@ bash <(curl -fsSL https://install.struxa.cloud)
 | `--nightly` | Install the latest pre-release build |
 | `--no-telemetry` | Disable anonymous install telemetry (see [Telemetry](#telemetry)) |
 | `update` | Update an existing installation to the latest release |
+| `--panel-only` | With `update`, update only the Panel (skip Wings) |
+| `--wings-only` | With `update`, update only Wings (skip the Panel) |
+| `uninstall` | Remove an existing installation (asks for confirmation first) |
 
-Install with Wings in the same run by selecting **Dashboard + Wings** when prompted — see [Wings - Installer](/wings/installation/installer) for what that step covers.
+Unattended installs are supported too: set `STRUXA_UNATTENDED=1` and provide the `STRUXA_*` variables documented in the [installer README](https://github.com/struxadotcloud/install).
 
 ## Telemetry
 
@@ -64,7 +80,7 @@ To update an existing installation:
 bash <(curl -fsSL https://install.struxa.cloud) update
 ```
 
-The updater reads the current version from `/opt/struxa/.env.prod`, fetches the latest tag, updates the image tag, pulls new images, and restarts the panel.
+The updater reads the current version from `/opt/struxa/.env.prod`, fetches the latest tag, updates the image tag, pulls new images, and restarts the Panel. If Wings is installed on the same machine, it updates Wings as well.
 
 ## What Gets Created
 
@@ -72,5 +88,7 @@ The updater reads the current version from `/opt/struxa/.env.prod`, fetches the 
 |---|---|
 | `/opt/struxa/docker-compose.prod.yml` | Production compose file |
 | `/opt/struxa/.env.prod` | All secrets and configuration (chmod 600) |
+| `/opt/wings/compose.yml` | Wings compose file (Dashboard + Wings mode) |
+| `/opt/wings/config/config.yml` | Installer's copy of the Wings config (Dashboard + Wings mode) |
 
-Webserver config is written to the appropriate location for your webserver (`/etc/nginx/sites-available/`, `/etc/apache2/sites-available/`, or `/etc/Caddyfile`).
+Web server config is written to the appropriate location for your web server (`/etc/nginx/sites-available/`, `/etc/apache2/sites-available/`, or `/etc/Caddyfile`).

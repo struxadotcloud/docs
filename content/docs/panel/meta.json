@@ -1,5 +1,5 @@
 {
   "title": "Panel",
   "defaultOpen": true,
-  "pages": ["index", "environment", "installation", "updating", "features", "next-steps"]
+  "pages": ["index", "installation", "next-steps", "features", "updating", "environment"]
 }

@@ -68,5 +68,5 @@ In a typical production setup:
 - **Game server containers** - run as Docker siblings of the Wings container on each Wings host.
 
 <Callout type="warn">
-  Wings should not run on the same host as the Panel in production. Resource contention between the Panel, MySQL, and game server containers causes instability.
+  In production, run Wings on separate machines from the Panel. Keeping the Panel, MySQL, and game server containers on a single host can cause resource contention under load.
 </Callout>

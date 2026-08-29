@@ -1,62 +1,22 @@
 ---
 title: Subscriptions
-description: How subscriptions work — the purchase flow, lifecycle, statuses, and admin management.
+description: How subscriptions work — buying, renewal, and what happens when the wallet runs dry.
 ---
 
-A subscription ties a user to a pricing tier for a fixed period. When a subscription is created, a game server is provisioned automatically with the plan's resource limits. When it expires or is canceled, the server is suspended.
+A subscription ties a user to a plan for a fixed period. Buying one creates a game server automatically with the plan's resource limits; the wallet is charged at the same time.
 
-## Purchase flow
+## Buying
 
-The purchase wizard on `/billing/[slug]` walks the user through four steps:
+The purchase wizard walks the user through four steps: pick a duration, choose a server type (egg), configure the server, and confirm with a name. On confirmation the panel charges the wallet, creates the subscription and the server, and stores an invoice — all or nothing, so a failed purchase never leaves a half-created server or a surprise charge.
 
-1. **Select duration** — choose from the available pricing tiers (7-day, 1-month, etc.) and see the price
-2. **Pick server type** — select an egg (server software template); only eggs allowed by the plan are shown
-3. **Configure** — choose a Docker image variant and fill in required startup variables
-4. **Confirm** — enter a server name; the panel checks wallet balance and node capacity, then completes the purchase
+## Renewal
 
-On confirmation the panel atomically:
-- Debits the wallet
-- Creates the subscription record with status `active`
-- Creates the server with the plan's CPU/RAM/disk limits
-- Stores an invoice record for the purchase (there's no invoice view or download for users yet — it's kept in the database only)
-- Records a `charge` transaction in the wallet history
+Subscriptions renew automatically at the end of each period. If the wallet has enough balance, the panel extends the subscription and records a new invoice. If not, the subscription becomes `past_due` and its servers are suspended until the wallet is topped up again.
 
-If any step fails the entire operation is rolled back and the wallet is not charged. Referral bonuses are not part of the purchase flow — they're awarded on wallet top-up (see [Wallet & Payments](/billing/wallet)).
+## Extending
 
-## Statuses
+Users can extend a subscription early by buying another period of the same product — the wallet is charged immediately and the end date moves forward.
 
-The subscription status column supports six values, but only three are ever set by the current code:
+## What admins see
 
-| Status | Meaning | Set by |
-|---|---|---|
-| `active` | Subscription is current; server is running | Purchase, and renewal when the wallet has enough balance |
-| `past_due` | A renewal charge failed; servers on the subscription are suspended | The renewal worker, when the wallet balance is too low |
-| `canceled` | Subscription ended | Not currently set anywhere — see note below |
-| `trialing` | Reserved for a trial period | Not currently used; there is no purchase path that grants a trial, even though trial settings exist |
-| `unpaid` | Reserved for repeated renewal failures | Not currently used |
-| `paused` | Reserved for an admin-initiated pause | Not currently used |
-
-## Lifecycle
-
-- **Renewal** — a background worker polls every 60 seconds for subscriptions whose period has ended. It always attempts to renew (there is no auto-renewal toggle to opt out): if the wallet has enough balance it debits it, extends `current_period_end`, and generates a renewal invoice; if not, it sets the subscription to `past_due` and suspends (kills and marks suspended) every server on it.
-- **Cancel** — a user can mark their own subscription with `cancelAtPeriodEnd: true`. This flag is only used for display today; the renewal worker does not check it, so a "canceled" subscription is still renewed and charged at period end like any other active one. There is no immediate-cancel action.
-- **Extension** — a user can manually extend their own subscription by purchasing an additional pricing tier period; this charges the wallet immediately and pushes `current_period_end` forward. There is no separate admin-initiated extension.
-- **Pause/unpause** — not implemented; there is no code path that sets a subscription to `paused`.
-
-<Callout type="warn">
-  Because the renewal worker ignores `cancelAtPeriodEnd`, subscriptions a user has "canceled" keep renewing (and charging the wallet) until the user cancels again after every period, or an admin intervenes directly. Treat this as a known code gap, not intended behavior.
-</Callout>
-
-## Capacity checking
-
-Before a purchase completes, the panel performs a soft capacity check:
-
-- It looks at all nodes that are eligible for the plan (considering node restrictions)
-- It checks current allocated RAM and disk (not CPU) against node capacity plus any configured overallocation headroom
-- If no node has enough headroom, the purchase fails with `NO_CAPACITY`; if there are no free allocations at all, it fails with `NO_ALLOCATIONS`
-
-Overallocation headroom is configured per-node in the node settings.
-
-## Admin visibility
-
-From a user's detail page at **Admin → Users → [user]** you can see that user's wallet balance, subscriptions, and wallet transaction history, and adjust their wallet balance. There is currently no admin UI to cancel, pause, or extend a subscription directly, and no cross-user subscription list filterable by status or product.
+On a user's page (**Admin → Users → [user]**) you'll find their wallet balance, subscription history, and transaction history, and you can adjust their balance there.

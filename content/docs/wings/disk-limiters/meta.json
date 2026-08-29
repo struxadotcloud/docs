@@ -1,4 +1,4 @@
 {
   "title": "Disk Limiters",
-  "pages": ["fusequota", "btrfs", "zfs", "xfs"]
+  "pages": ["btrfs", "xfs", "zfs", "fusequota"]
 }

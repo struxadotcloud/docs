@@ -3,73 +3,40 @@ title: Quickstart
 description: Enable billing, configure a payment provider, create your first plan, and run a test purchase.
 ---
 
-This guide walks you through getting billing fully operational on a fresh Struxa instance.
+Five steps from zero to your first paid server.
 
 ## 1. Enable billing
 
-Navigate to **Admin → Billing** and open the **Settings** tab. Toggle **Enable Billing** on and set:
-
-- **Default currency** — ISO 4217 code (e.g. `USD`, `EUR`, `PLN`). All prices are stored in this currency.
-- **Invoice prefix** — a short string prepended to invoice numbers (e.g. `INV-`). Optional. An invoice record is stored in the database for every purchase and renewal, but there's no invoice view or download for users yet.
-
-Save the settings. The `/billing` route and the wallet are now visible to users.
+Go to **Admin → Billing → Settings** and toggle billing on. Pick a default currency (an ISO code like `USD` or `PLN`) and, if you like, an invoice prefix such as `INV-`. The `/billing` page and the wallet become visible to users immediately.
 
 ## 2. Configure a payment provider
 
-Go to **Admin → Billing → Providers**. Struxa ships with two built-in providers:
+Open **Admin → Billing → Providers** and fill in one of the built-in providers.
 
-### Stripe
-
-| Field | Where to find it |
-|---|---|
-| Publishable key | Stripe Dashboard → Developers → API keys |
-| Secret key | Stripe Dashboard → Developers → API keys |
-| Webhook signing secret | Stripe Dashboard → Developers → Webhooks → your endpoint |
-
-Set your webhook endpoint in Stripe to:
+**Stripe** — you'll need the publishable key and secret key from the Stripe Dashboard (**Developers → API keys**) and the webhook signing secret (**Developers → Webhooks → your endpoint**). Point Stripe's webhook at:
 
 ```
 https://your-panel.example.com/api/billing/webhook/stripe
 ```
 
-### SimPay
-
-| Field | Where to find it |
-|---|---|
-| API password | SimPay merchant panel → API |
-| Service ID | SimPay merchant panel → Services |
-
-Set your webhook endpoint in SimPay to:
+**SimPay** — enter the API password (**merchant panel → API**) and your service ID (**merchant panel → Services**). Point SimPay's webhook at:
 
 ```
 https://your-panel.example.com/api/billing/webhook/simpay
 ```
 
-Save the provider. Users now see it as a top-up option in their wallet.
+Save, and users will see the provider as a top-up option in their wallet.
 
-## 3. Create a category and product
+## 3. Create a category and a product
 
-Categories group related hosting plans. Navigate to **Admin → Billing → Catalog**.
+Open **Admin → Billing → Catalog**. A category groups related plans — give it a name, a description, and optionally an icon and banner image. Inside it, create a product: set its resource limits (CPU, RAM, disk, and more) and add one or more pricing tiers, each with a duration (7 days to a year) and a price. Every tier of a product provisions the same limits — only the price and period change.
 
-1. Click **New Category** — give it a name, optional icon, banner image, and description.
-2. Inside the category, click **New Product** — give it a name, mark it featured if you want it highlighted, set its resource limits (CPU, RAM, disk, etc. — these apply to every duration of this product), and add one or more pricing tiers with a duration and price each.
+## 4. Top up and buy
 
-Add more pricing tiers (7-day, 1-month, 3-month, 6-month, 1-year) to offer several billing periods for the same product — they'll all provision the same resource limits.
+As a regular user, open `/billing/wallet` and top up through a provider. Once the webhook lands, the balance updates. Then visit `/billing`, pick a category, and walk through the purchase wizard. A server appears in the user's server list with the plan's limits applied.
 
-See [Plans & Products](/billing/plans) for a full reference on resource limits and how categories are displayed.
+## 5. Verify
 
-## 4. Top up a wallet and make a purchase
+On the user's page (**Admin → Users → [user]**) the new subscription should show as `active` with the right dates, linked to the server.
 
-1. As a regular user, go to `/billing/wallet` and click **Top Up**.
-2. Select a provider, choose an amount, complete the payment flow.
-3. Once the webhook fires, your balance updates automatically.
-4. Go to `/billing`, open your category, and work through the 4-step purchase wizard.
-5. On completion, a server is created and appears in your server list with the plan's resource limits applied.
-
-<Callout type="info">
-  For local testing, you can manually adjust a user's wallet balance from **Admin → Users → [user]** without going through a payment provider.
-</Callout>
-
-## 5. Verify the subscription
-
-Navigate to that user's page at **Admin → Users → [user]** and confirm the new subscription shows status `active` with the correct start and end dates, linked to the right server. There is no cross-user subscription list yet — subscriptions are only visible per-user.
+For local testing you can skip the provider entirely: adjust a user's wallet balance directly from their page.
