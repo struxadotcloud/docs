@@ -33,7 +33,7 @@ Admins are notified about events across the whole panel:
 Go to **Admin → Settings → Notifications**. There are two endpoints, each with an enable toggle, its credentials, and a **Send Test** button:
 
 - **Discord** — a webhook URL. Create one in your Discord channel under **Channel Settings → Integrations → Webhooks**.
-- **Telegram** — a bot token and chat ID. Create a bot with [@BotFather](https://t.me/BotFather) and grab its token, then find your chat ID.
+- **Telegram** — a bot token and chat ID. Create a bot with [@BotFather](https://t.me/BotFather) and grab its token. To find a chat ID, send the bot a message, then open `https://api.telegram.org/bot<token>/getUpdates` in your browser — the chat ID is in the response. Groups and channels work the same way; add the bot to them first.
 
 The same page has a **User Notifications** section with the toggle **Allow users to set up their own notifications**. When enabled, users see a Notifications tab in their account settings; when disabled, the tab is hidden.
 

@@ -22,7 +22,7 @@ bash <(curl -fsSL https://install.struxa.cloud)
 - **Installation mode** - **Dashboard only** or **Dashboard + Wings**
 - **Admin account** - email, password, and display name. This account is created during the install, so you can log in right after it finishes
 - **Panel domain** - used for `APP_URL`, `BETTER_AUTH_URL`, and `CORS_ORIGIN`
-- **Webserver** - use your existing nginx, Apache, or Caddy, install nginx fresh, or skip (Docker Compose only)
+- **Web server** - use your existing nginx, Apache, or Caddy, install nginx fresh, or skip (Docker Compose only)
 - **SSL** - Let's Encrypt certificate, self-signed certificate, or none
 - **Cloudflare Turnstile** - optional bot protection keys
 
@@ -34,7 +34,7 @@ When you choose **Dashboard + Wings**, it also asks for the node's domain or IP,
 2. **Fetches the latest release** - resolves the current stable tag from GitHub and downloads the production compose file.
 3. **Generates all secrets** - RSA key pair, auth secret, database passwords, and encryption key via openssl. Nothing is reused or hardcoded.
 4. **Creates your admin account** - the Panel creates the account through a bootstrap endpoint, so the `/setup` wizard is skipped. (The wizard only appears after manual installs.)
-5. **Configures a webserver** - writes the reverse proxy config for the Panel.
+5. **Configures a web server** - writes the reverse proxy config for the Panel.
 6. **Handles SSL** - obtains a Let's Encrypt certificate via certbot, generates a self-signed cert, or skips SSL entirely.
 7. **Starts services** - pulls images and starts the Panel and MySQL containers.
 
@@ -89,6 +89,6 @@ The updater reads the current version from `/opt/struxa/.env.prod`, fetches the 
 | `/opt/struxa/docker-compose.prod.yml` | Production compose file |
 | `/opt/struxa/.env.prod` | All secrets and configuration (chmod 600) |
 | `/opt/wings/compose.yml` | Wings compose file (Dashboard + Wings mode) |
-| `/opt/wings/config/config.yml` | Wings configuration (Dashboard + Wings mode) |
+| `/opt/wings/config/config.yml` | Installer's copy of the Wings config (Dashboard + Wings mode) |
 
-Webserver config is written to the appropriate location for your webserver (`/etc/nginx/sites-available/`, `/etc/apache2/sites-available/`, or `/etc/Caddyfile`).
+Web server config is written to the appropriate location for your web server (`/etc/nginx/sites-available/`, `/etc/apache2/sites-available/`, or `/etc/Caddyfile`).

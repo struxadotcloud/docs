@@ -11,7 +11,7 @@ Wings is the node agent component of Struxa. It runs on each physical or virtual
 - Streams real-time console output to the Panel via WebSocket
 - Provides SFTP access to server files (port 2022 by default)
 - Handles file operations: uploads, downloads, decompression, compression
-- Manages backups: local, ddup-bak, S3-compatible, restic, Proxmox Backup Server, kopia, btrfs, zfs, Google Drive (see [Backup Adapters](/wings/backup-adapters))
+- Manages backups: local, ddup-bak, S3-compatible, restic, Proxmox Backup Server, kopia, and Google Drive (see [Backup Adapters](/wings/backup-adapters))
 - Reports resource usage (CPU, RAM, disk, network) back to the Panel
 - Enforces resource limits (memory, CPU, disk quotas per server)
 
@@ -51,5 +51,5 @@ User  ──SFTP :2022──────────► Wings SFTP ──► /va
 
 ## Pterodactyl Compatibility
 
-Wings is a Rust rewrite of Pterodactyl Wings with 100% API compatibility. Any Pterodactyl egg, nest, or node configuration will work with Struxa Wings without modification.
+Wings is a Rust rewrite of Pterodactyl Wings that keeps the same API — existing eggs, nests, and node configurations work without modification.
 

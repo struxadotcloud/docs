@@ -24,7 +24,7 @@ When prompted for installation mode, choose **Dashboard + Wings**.
 
 1. **Downloads the Wings compose file** from `struxadotcloud/wings` on GitHub.
 2. **Registers the node in the Panel** - creates the node, generates its token, and returns a complete configuration.
-3. **Writes `config.yml`** with the real token to `/opt/wings/config/config.yml` and `/etc/pterodactyl/config.yml`.
+3. **Writes `config.yml`** with the real token to `/etc/pterodactyl/config.yml` — the file Wings reads — and keeps a copy at `/opt/wings/config/config.yml`.
 4. **Configures a reverse proxy** for Wings on port 8080 (nginx, Apache, or Caddy).
 5. **Starts Wings** - the node appears as connected in the Panel within about 30 seconds.
 
@@ -47,5 +47,5 @@ The updater handles both the Panel and Wings. Wings is updated by pulling the la
 | Path | Contents |
 |---|---|
 | `/opt/wings/compose.yml` | Wings compose file |
-| `/opt/wings/config/config.yml` | Wings configuration |
+| `/opt/wings/config/config.yml` | Installer's copy of the config |
 | `/etc/pterodactyl/config.yml` | System copy of the config |

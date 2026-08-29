@@ -38,7 +38,7 @@ Users can save backups to **their personal Google Drive**. This is fully optiona
 3. Add the redirect URI shown in Admin → Settings → Backups (`{panel URL}/api/account/google-drive/callback`)
 4. Paste the client ID and secret in Admin → Settings → Backups and save
 
-While your Google app is in **testing mode** (the default), add each user's email as a test user in the Google Cloud Console.
+While your Google app is in **testing mode** (the default), add each user's email as a test user in the Google Cloud Console. Testing mode also expires refresh tokens after 7 days — for a long-running setup, publish the app (consent screen → **In production**) so scheduled backups keep working.
 
 ### User flow
 
@@ -46,10 +46,10 @@ While your Google app is in **testing mode** (the default), add each user's emai
 2. On a server's **Backups** page the create button becomes a dropdown — choose **Backup to Google Drive**
 3. Backups land in `Struxa Backups/{server name} (id)` in the user's Drive; rows show a Google badge
 
-Download, restore, and delete work exactly like other backups — downloads stream through the Panel, restores are pulled by Wings, and deleting a backup removes the Drive file too (including schedule-driven retention deletes).
+Download, restore, and delete work exactly like other backups — downloads stream through the Panel, restores are pulled by Wings, and deleting a backup removes the Drive file too (including schedule-driven retention deletes). If the Drive file can't be deleted (for example, after the account was disconnected), the backup row in the Panel is still removed and the file stays in Drive.
 
 ### Behavior notes
 
 - Drive backups use the user's own Google storage, so they count separately from plan backup limits
-- Disconnecting revokes the Google token server-side; existing backups stay listed until the account is reconnected
+- Disconnecting revokes the Google token server-side. Existing backups stay listed, but their files can no longer be fetched or deleted from Drive — reconnect the account to clean them up
 - Reconnect with the **same Google account** you used originally — that keeps existing backups tied to your Drive
