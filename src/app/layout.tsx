@@ -28,6 +28,11 @@ export const metadata: Metadata = {
   },
   description:
     'Self-hosted game server management platform. Documentation for the Struxa panel, Wings node agent, and installer.',
+  icons: {
+    icon: 'https://struxa.cloud/images/brand/favicon.png',
+    shortcut: 'https://struxa.cloud/images/brand/favicon.png',
+    apple: 'https://struxa.cloud/images/brand/favicon.png',
+  },
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {

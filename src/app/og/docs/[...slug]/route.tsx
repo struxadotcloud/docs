@@ -2,7 +2,7 @@ import { getPageImage, source } from '@/lib/source';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
 
-const logo = 'https://struxa.cloud/assets/logo-white.svg';
+const logo = 'https://struxa.cloud/images/brand/icon-whiteblue.png';
 
 export const revalidate = false;
 
