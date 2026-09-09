@@ -6,6 +6,14 @@ const withMDX = createMDX();
 const config = {
   output: 'export',
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'struxa.cloud',
+      },
+    ],
+  },
 };
 
 export default withMDX(config);

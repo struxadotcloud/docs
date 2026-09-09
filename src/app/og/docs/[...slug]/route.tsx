@@ -1,10 +1,8 @@
 import { getPageImage, source } from '@/lib/source';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
 
-const logo = `data:image/svg+xml;base64,${readFileSync(join(process.cwd(), 'public/logo-white.svg')).toString('base64')}`;
+const logo = 'https://struxa.cloud/assets/logo-white.svg';
 
 export const revalidate = false;
 

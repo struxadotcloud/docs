@@ -8,7 +8,7 @@ export function baseOptions(): BaseLayoutProps {
       title: (
         <span className="inline-flex items-center gap-2">
           <Image
-            src="/logo-white.svg"
+            src="https://struxa.cloud/assets/logo-white.svg"
             alt="struxa"
             width={18}
             height={18}
@@ -17,7 +17,7 @@ export function baseOptions(): BaseLayoutProps {
             priority
           />
           <Image
-            src="/logo.svg"
+            src="https://struxa.cloud/assets/logo.svg"
             alt="struxa"
             width={18}
             height={18}
