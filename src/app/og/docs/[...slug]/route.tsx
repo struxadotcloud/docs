@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
 
-const logo = `data:image/svg+xml;base64,${readFileSync(join(process.cwd(), 'public/logo-white.svg')).toString('base64')}`;
+const logo = `data:image/png;base64,${readFileSync(join(process.cwd(), 'public/brand/wordmark-dark.png')).toString('base64')}`;
 
 export const revalidate = false;
 
@@ -100,8 +100,7 @@ function OGImage({ title, description }: { title: string; description?: string }
       {/* logo + wordmark */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} width={28} height={28} alt="" />
-        <span style={{ fontSize: '20px', fontWeight: 600, color: '#fafafa', fontFamily: 'Funnel Display' }}>struxa</span>
+        <img src={logo} width={140} height={28} alt="Struxa" />
       </div>
 
       {/* main content */}

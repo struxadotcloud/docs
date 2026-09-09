@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { appName, gitConfig } from './shared';
+import { gitConfig } from './shared';
 import Image from 'next/image';
 
 export function baseOptions(): BaseLayoutProps {
@@ -8,34 +8,25 @@ export function baseOptions(): BaseLayoutProps {
       title: (
         <span className="inline-flex items-center gap-2">
           <Image
-            src="/logo-white.svg"
+            src="/brand/wordmark-dark.png"
             alt="struxa"
-            width={18}
-            height={18}
+            width={100}
+            height={20}
             className="hidden dark:block"
-            style={{ width: 18, height: 18 }}
+            style={{ width: 100, height: 20 }}
             priority
+            unoptimized
           />
           <Image
-            src="/logo.svg"
+            src="/brand/wordmark-light.png"
             alt="struxa"
-            width={18}
-            height={18}
+            width={100}
+            height={20}
             className="block dark:hidden"
-            style={{ width: 18, height: 18 }}
+            style={{ width: 100, height: 20 }}
             priority
+            unoptimized
           />
-          <span
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '0.9375rem',
-              fontWeight: 600,
-              lineHeight: 1,
-              color: 'var(--color-fd-foreground)',
-            }}
-          >
-            {appName}
-          </span>
         </span>
       ),
     },
